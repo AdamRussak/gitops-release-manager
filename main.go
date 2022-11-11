@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"giops-reelase-manager/pkg/git"
 	"os"
 	"regexp"
 	"strings"
@@ -19,7 +20,7 @@ func main() {
 	org := os.Args[2]
 	project := os.Args[3]
 	r, _ := git.PlainOpen(directory)
-
+	git.CheckOutBranch()
 	tagrefs, _ := r.Tags()
 	_ = tagrefs.ForEach(func(t *plumbing.Reference) error {
 		fmt.Println(t)
