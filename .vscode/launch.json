@@ -10,7 +10,7 @@
             "request": "launch",
             "mode": "debug",
             "program": "${file}",
-            "args": ["/home/coder/project/gitops-release-manager"]
+            "args": ["/home/coder/project/gitops-release-manager","adamrussak","go-release-mamnger-test"]
         },
         {
             "name": "Launch Package",

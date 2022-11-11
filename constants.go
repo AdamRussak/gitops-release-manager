@@ -1,3 +1,4 @@
 package main
 
-const adoUrl = "https://dev.azure.com/"
+const KadoUrl = "https://dev.azure.com/"
+const KmdTable = "| work-item | Hash |\n |---|---|\n"

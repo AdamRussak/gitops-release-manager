@@ -36,7 +36,7 @@ func main() {
 				split := splitCommitMessage(commit.Comment)
 				commentsArray = append(commentsArray, workItem{ServiceName: split[0], Name: split[2], Hash: split[1]})
 			} else {
-				commentsArray = append(commentsArray, workItem{ServiceName: "untracked", Name: commit.Comment, Hash: commit.Hash})
+				commentsArray = append(commentsArray, workItem{ServiceName: "untracked", Name: commit.Comment, Hash: ""})
 			}
 		}
 		sortingForMD := sortCommitsForMD(commentsArray, org, project)
@@ -82,11 +82,21 @@ func sortCommitsForMD(commits []workItem, org, project string) []string {
 	for c := range commits {
 		testString, itemInArray := StringContains(returnedString, commits[c].ServiceName)
 		workItem := getWorkItem(commits[c].Name)
-		if testString {
-			returnedString[itemInArray] = returnedString[itemInArray] + "- [ ] " + "[" + commits[c].Name + "](" + adoUrl + org + "/" + project + "/_workitems//edit/" + workItem + ")" + " " + commits[c].Hash + "\n"
+		if commits[c].ServiceName == "untracked" {
+			if testString {
+				returnedString[itemInArray] = returnedString[itemInArray] + "| " + commits[c].Name + " | " + commits[c].Hash + " |\n"
+			} else {
+				returnedString = append(returnedString, "## "+commits[c].ServiceName+"\n"+KmdTable+"| "+commits[c].Name+" | "+commits[c].Hash+" |\n")
+
+			}
 		} else {
-			returnedString = append(returnedString, "## "+commits[c].ServiceName+"\n"+"- [ ] "+"["+commits[c].Name+"]("+adoUrl+org+"/"+project+"/_workitems//edit/"+workItem+")"+" "+commits[c].Hash+"\n")
+			if testString {
+				returnedString[itemInArray] = returnedString[itemInArray] + "| " + "[" + commits[c].Name + "](" + KadoUrl + org + "/" + project + "/_workitems//edit/" + workItem + ")" + " | " + commits[c].Hash + " |\n"
+			} else {
+				returnedString = append(returnedString, "## "+commits[c].ServiceName+"\n"+KmdTable+"| "+"["+commits[c].Name+"]("+KadoUrl+org+"/"+project+"/_workitems//edit/"+workItem+")"+" | "+commits[c].Hash+" |\n")
+			}
 		}
+
 	}
 	return returnedString
 }
