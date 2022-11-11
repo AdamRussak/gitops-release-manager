@@ -68,6 +68,8 @@ func splitCommitMessage(comment string) []string {
 	return output
 }
 
+// TODO: create struct for each service
+// TODO: create structerd comments: product version,service, work-item + work item description, commit id
 func writeToMD(commentsArray [][]string, header string) {
 	var writingOutput string
 	for _, array := range commentsArray {

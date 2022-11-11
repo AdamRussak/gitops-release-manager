@@ -1,7 +1,9 @@
 # gitops-release-manager
 # helping links:
+https://learn.microsoft.com/en-us/azure/devops/boards/work-items/work-item-url-hyperlink?view=azure-devops
 https://stackoverflow.com/questions/18679870/list-commits-between-2-commit-hashes-in-git
-
+https://dev.azure.com/adamrussak/go-release-mamnger-test/_workitems/edit/1
+example of work-item url: `https://dev.azure.com/OrganizationName/ProjectName/_workitems/edit/WorkItemNumber`
 try use `go-git`
 ```sh
 # tag old commit
