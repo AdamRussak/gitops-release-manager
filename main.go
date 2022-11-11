@@ -17,8 +17,6 @@ func main() {
 	directory := os.Args[1]
 	r, _ := git.PlainOpen(directory)
 
-	// List all tag references, both lightweight tags and annotated tags
-
 	tagrefs, _ := r.Tags()
 	_ = tagrefs.ForEach(func(t *plumbing.Reference) error {
 		fmt.Println(t)
@@ -27,24 +25,28 @@ func main() {
 	tags, _ := r.TagObjects()
 	_ = tags.ForEach(func(t *object.Tag) error {
 		fmt.Println(t.Name)
-		fmt.Println(t.Tagger.When)
-		fmt.Println(bumpVersion(t.Name))
-		getCommits(r, t.Target)
+		commits := getCommits(r, t.Target)
+		var commentsArray [][]string
+		for _, commit := range commits {
+			commentsArray = append(commentsArray, splitCommitMessage(commit.Comment))
+		}
+		writeToMD(commentsArray)
 		return nil
 	})
 
 }
 
-func getCommits(r *git.Repository, tagHash plumbing.Hash) {
+func getCommits(r *git.Repository, tagHash plumbing.Hash) []commit {
+	var comments []commit
 	until := time.Now()
 	fromCommit, _ := r.CommitObject(tagHash)
 	cIter, _ := r.Log(&git.LogOptions{Since: &fromCommit.Author.When, Until: &until})
 	// ... just iterates over the commits, printing it
 	_ = cIter.ForEach(func(c *object.Commit) error {
-		fmt.Println(c)
-		splitCommitMessage(c.Message)
+		comments = append(comments, commit{Hash: c.Hash.String(), Comment: c.Message})
 		return nil
 	})
+	return comments
 }
 
 func bumpVersion(tag string) string {
@@ -54,16 +56,15 @@ func bumpVersion(tag string) string {
 	return fmt.Sprint(segments[0]) + "." + fmt.Sprint(segments[1]) + "." + fmt.Sprint(segments[2]+1)
 }
 
-func splitCommitMessage(comment string) {
-	// var output []string
+func splitCommitMessage(comment string) []string {
+	var output []string
 	splited := strings.SplitAfter(comment, "]")
-	// regCommit := regexp.MustCompilePOSIX(`\[(.*?)\]`)
-	// stringsArray := regCommit.FindAllStringSubmatch(comment, 3)
-	// for _, s := range stringsArray {
-	// 	s = strings.TrimSuffix(s, "]")
-	// 	s = strings.TrimPrefix(s, "[")
-	// 	output = append(output, s)
-	// }
-	fmt.Println(splited)
-	os.Exit(2)
+	for _, s := range splited {
+		s = strings.TrimSuffix(s, "]")
+		s = strings.TrimPrefix(s, "[")
+		output = append(output, s)
+	}
+	return output
 }
+
+func writeToMD(commentsArray [][]string) {}
