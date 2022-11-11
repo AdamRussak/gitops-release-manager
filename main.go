@@ -25,12 +25,13 @@ func main() {
 	tags, _ := r.TagObjects()
 	_ = tags.ForEach(func(t *object.Tag) error {
 		fmt.Println(t.Name)
+		bumbedVersion := bumpVersion(t.Name)
 		commits := getCommits(r, t.Target)
 		var commentsArray [][]string
 		for _, commit := range commits {
 			commentsArray = append(commentsArray, splitCommitMessage(commit.Comment))
 		}
-		writeToMD(commentsArray)
+		writeToMD(commentsArray, bumbedVersion)
 		return nil
 	})
 
@@ -67,4 +68,23 @@ func splitCommitMessage(comment string) []string {
 	return output
 }
 
-func writeToMD(commentsArray [][]string) {}
+func writeToMD(commentsArray [][]string, header string) {
+	var writingOutput string
+	for _, array := range commentsArray {
+		var commentMD = "- [ ] "
+		for _, comment := range array {
+			commentMD = commentMD + comment + " "
+		}
+		writingOutput = writingOutput + commentMD + "\n"
+	}
+	header = "# " + header + "\n"
+	fmt.Println(header + writingOutput)
+	writeToFile([]byte(header + writingOutput))
+}
+
+func writeToFile(row []byte) {
+	err := os.WriteFile("/home/coder/project/gitops-release-manager/tests/test.md", row, 0644)
+	if err != nil {
+		panic(err)
+	}
+}
