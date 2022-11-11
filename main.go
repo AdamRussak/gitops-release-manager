@@ -32,8 +32,12 @@ func main() {
 		commits := getCommits(r, t.Target)
 		var commentsArray []workItem
 		for _, commit := range commits {
-			split := splitCommitMessage(commit.Comment)
-			commentsArray = append(commentsArray, workItem{ServiceName: split[0], Name: split[2], Hash: split[1]})
+			if isCommitConvention(commit.Comment) {
+				split := splitCommitMessage(commit.Comment)
+				commentsArray = append(commentsArray, workItem{ServiceName: split[0], Name: split[2], Hash: split[1]})
+			} else {
+				commentsArray = append(commentsArray, workItem{ServiceName: "untracked", Name: commit.Comment, Hash: commit.Hash})
+			}
 		}
 		sortingForMD := sortCommitsForMD(commentsArray, org, project)
 		writeToMD(sortingForMD, t.Name, bumbedVersion)
@@ -90,6 +94,11 @@ func sortCommitsForMD(commits []workItem, org, project string) []string {
 func getWorkItem(s string) string {
 	workItemRegex := regexp.MustCompile(`[0-9]+`)
 	return workItemRegex.FindString(s)
+}
+
+func isCommitConvention(commit string) bool {
+	isCommit := regexp.MustCompile(`\[([a-zA-Z]+(-[a-zA-Z]+)+)]\[[A-Za-z0-9]+]\[[^\]]*]`)
+	return isCommit.MatchString(commit)
 }
 
 func StringContains(s []string, e string) (bool, int) {
