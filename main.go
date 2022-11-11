@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"regexp"
 	"strings"
 	"time"
 
@@ -15,6 +16,8 @@ import (
 
 func main() {
 	directory := os.Args[1]
+	org := os.Args[2]
+	project := os.Args[3]
 	r, _ := git.PlainOpen(directory)
 
 	tagrefs, _ := r.Tags()
@@ -27,11 +30,13 @@ func main() {
 		fmt.Println(t.Name)
 		bumbedVersion := bumpVersion(t.Name)
 		commits := getCommits(r, t.Target)
-		var commentsArray [][]string
+		var commentsArray []workItem
 		for _, commit := range commits {
-			commentsArray = append(commentsArray, splitCommitMessage(commit.Comment))
+			split := splitCommitMessage(commit.Comment)
+			commentsArray = append(commentsArray, workItem{ServiceName: split[0], Name: split[2], Hash: split[1]})
 		}
-		writeToMD(commentsArray, bumbedVersion)
+		sortingForMD := sortCommitsForMD(commentsArray, org, project)
+		writeToMD(sortingForMD, t.Name, bumbedVersion)
 		return nil
 	})
 
@@ -68,18 +73,40 @@ func splitCommitMessage(comment string) []string {
 	return output
 }
 
-// TODO: create struct for each service
-// TODO: create structerd comments: product version,service, work-item + work item description, commit id
-func writeToMD(commentsArray [][]string, header string) {
+func sortCommitsForMD(commits []workItem, org, project string) []string {
+	var returnedString []string
+	for c := range commits {
+		testString, itemInArray := StringContains(returnedString, commits[c].ServiceName)
+		workItem := getWorkItem(commits[c].Name)
+		if testString {
+			returnedString[itemInArray] = returnedString[itemInArray] + "- [ ] " + "[" + commits[c].Name + "](" + adoUrl + org + "/" + project + "/_workitems//edit/" + workItem + ")" + " " + commits[c].Hash + "\n"
+		} else {
+			returnedString = append(returnedString, "## "+commits[c].ServiceName+"\n"+"- [ ] "+"["+commits[c].Name+"]("+adoUrl+org+"/"+project+"/_workitems//edit/"+workItem+")"+" "+commits[c].Hash+"\n")
+		}
+	}
+	return returnedString
+}
+
+func getWorkItem(s string) string {
+	workItemRegex := regexp.MustCompile(`[0-9]+`)
+	return workItemRegex.FindString(s)
+}
+
+func StringContains(s []string, e string) (bool, int) {
+	for a := range s {
+		if strings.Contains(s[a], e) {
+			return true, a
+		}
+	}
+	return false, 0
+}
+
+func writeToMD(commentsArray []string, oldVersion, header string) {
 	var writingOutput string
 	for _, array := range commentsArray {
-		var commentMD = "- [ ] "
-		for _, comment := range array {
-			commentMD = commentMD + comment + " "
-		}
-		writingOutput = writingOutput + commentMD + "\n"
+		writingOutput = writingOutput + array
 	}
-	header = "# " + header + "\n"
+	header = "# " + oldVersion + "...." + header + "\n"
 	fmt.Println(header + writingOutput)
 	writeToFile([]byte(header + writingOutput))
 }
