@@ -31,9 +31,10 @@ func main() {
 	})
 	latestTag := core.EvaluateVersion(tagsArray)
 	latestTagObject, err := r.Tag(latestTag)
+	log.Println(latestTagObject)
 	core.OnErrorFail(err, "failed to get Tag Object")
-	bumbedVersion := bumpVersion(latestTagObject.Name().String())
-	log.Println(bumbedVersion)
+	// bumbedVersion := bumpVersion(latestTagObject.Name().String())
+
 	// commits := getCommits(r, latestTagObject.)
 	// var commentsArray []workItem
 	// for _, commit := range commits {
