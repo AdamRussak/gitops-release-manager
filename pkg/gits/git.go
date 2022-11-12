@@ -78,7 +78,6 @@ func fetchOrigin(repo *git.Repository, refSpecStr string) error {
 func GetCommits(r *git.Repository, tagHash plumbing.Hash) []commit {
 	var comments []commit
 	until := time.Now()
-	log.Info(tagHash.String())
 	fromCommit, err := r.CommitObject(tagHash)
 	core.OnErrorFail(err, "fail to get commit object for tag")
 	log.Info(fromCommit)

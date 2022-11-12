@@ -29,8 +29,9 @@ func main() {
 	log.Infof("New Version is: %s", bumbedVersion)
 	latestTagObject, err := r.Tag(latestTag)
 	core.OnErrorFail(err, "failed to get Tag Object")
-	log.Info(latestTagObject.Hash().String())
-	commits := gits.GetCommits(r, latestTagObject.Hash())
+	tagObjectCommit, err := r.TagObject(latestTagObject.Hash())
+	core.OnErrorFail(err, "failed to get tag object commit")
+	commits := gits.GetCommits(r, tagObjectCommit.Target)
 	var commentsArray []workItem
 	for _, commit := range commits {
 		if gits.IsCommitConvention(commit.Comment) {
