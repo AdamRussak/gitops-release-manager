@@ -30,7 +30,7 @@ func CheckOutBranch(r *git.Repository, branch string) {
 	branchRefName := plumbing.NewBranchReferenceName(branch)
 	branchCoOpts := git.CheckoutOptions{
 		Branch: plumbing.ReferenceName(branchRefName),
-		Force:  false,
+		Force:  true,
 	}
 	if err := w.Checkout(&branchCoOpts); err != nil {
 		log.Warning("local checkout of branch '%s' failed, will attempt to fetch remote branch of same name.", branch)
@@ -78,8 +78,12 @@ func fetchOrigin(repo *git.Repository, refSpecStr string) error {
 func GetCommits(r *git.Repository, tagHash plumbing.Hash) []commit {
 	var comments []commit
 	until := time.Now()
-	fromCommit, _ := r.CommitObject(tagHash)
-	cIter, _ := r.Log(&git.LogOptions{Since: &fromCommit.Author.When, Until: &until})
+	log.Info(tagHash.String())
+	fromCommit, err := r.CommitObject(tagHash)
+	core.OnErrorFail(err, "fail to get commit object for tag")
+	log.Info(fromCommit)
+	cIter, err := r.Log(&git.LogOptions{Since: &fromCommit.Author.When, Until: &until})
+	core.OnErrorFail(err, "fail to get commits from tag to now")
 	// ... just iterates over the commits, printing it
 	_ = cIter.ForEach(func(c *object.Commit) error {
 		comments = append(comments, commit{Hash: c.Hash.String(), Comment: c.Message})

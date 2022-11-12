@@ -13,15 +13,17 @@ import (
 
 func main() {
 	directory, org, project := os.Args[1], os.Args[2], os.Args[3]
-	r, _ := git.PlainOpen(directory)
+	r, err := git.PlainOpen(directory)
+	core.OnErrorFail(err, "faild to get git repo")
 	gits.CheckOutBranch(r, "main")
 	tags, _ := r.TagObjects()
 	var tagsArray []string
-	_ = tags.ForEach(func(t *object.Tag) error {
+	err = tags.ForEach(func(t *object.Tag) error {
 		log.Infof("found tag %s", t.Name)
 		tagsArray = append(tagsArray, t.Name)
 		return nil
 	})
+	core.OnErrorFail(err, "err of ForEach tags process")
 	latestTag := core.EvaluateVersion(tagsArray)
 	bumbedVersion := core.BumpVersion(latestTag)
 	log.Infof("New Version is: %s", bumbedVersion)
