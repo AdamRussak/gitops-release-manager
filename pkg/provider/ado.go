@@ -11,6 +11,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+// TODO: check if tags already exist in work-item
 func UpdateTag(organization, personalAccessToken, project, id, version string) {
 	organizationUrl := "https://dev.azure.com/" + organization + "/" + project
 	p := base64.StdEncoding.EncodeToString([]byte(" :" + personalAccessToken))

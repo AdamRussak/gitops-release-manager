@@ -12,6 +12,8 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+// TODO: add creation of new tag
+// TODO: add push to new tag after creation (should be after succesfull finish of process)
 func main() {
 	directory, org, project, pat := os.Args[1], os.Args[2], os.Args[3], os.Args[4]
 	r, err := git.PlainOpen(directory)
