@@ -20,6 +20,7 @@ func UpdateTag(organization, personalAccessToken, project, id, version string) {
 	as := "Basic " + p
 	log.Trace(as)
 	req.Header.Add("Authorization", as)
+	req.Header.Add("Content-Type", "application/json-patch+json")
 	resp, err := client.Do(req)
 	core.OnErrorFail(err, "faild to use http request")
 	//We Read the response body on the line below.
