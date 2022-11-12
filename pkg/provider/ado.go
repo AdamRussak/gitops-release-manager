@@ -38,5 +38,6 @@ func tagBody(newVersion string) []byte {
 		"value": newVersion,
 	})
 	core.OnErrorFail(err, "faild to marshel body")
-	return payload
+	manipulate := "[" + string(payload) + "]"
+	return []byte(manipulate)
 }
