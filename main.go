@@ -18,8 +18,8 @@ import (
 
 func main() {
 	directory := os.Args[1]
-	// org := os.Args[2]
-	// project := os.Args[3]
+	org := os.Args[2]
+	project := os.Args[3]
 	r, _ := git.PlainOpen(directory)
 	gits.CheckOutBranch(r, "main")
 	tags, _ := r.TagObjects()
@@ -30,23 +30,22 @@ func main() {
 		return nil
 	})
 	latestTag := core.EvaluateVersion(tagsArray)
-	latestTagObject, err := r.Tag(latestTag)
-	log.Println(latestTagObject)
-	core.OnErrorFail(err, "failed to get Tag Object")
-	bumbedVersion := bumpVersion(latestTagObject.Hash().String())
+	bumbedVersion := bumpVersion(latestTag)
 	log.Infof("New Version is: %s", bumbedVersion)
-	// commits := getCommits(r, latestTagObject.)
-	// var commentsArray []workItem
-	// for _, commit := range commits {
-	// 	if isCommitConvention(commit.Comment) {
-	// 		split := splitCommitMessage(commit.Comment)
-	// 		commentsArray = append(commentsArray, workItem{ServiceName: split[0], Name: split[2], Hash: split[1]})
-	// 	} else {
-	// 		commentsArray = append(commentsArray, workItem{ServiceName: "untracked", Name: commit.Comment, Hash: ""})
-	// 	}
-	// }
-	// sortingForMD := sortCommitsForMD(commentsArray, org, project)
-	// writeToMD(sortingForMD, t.Name, bumbedVersion)
+	latestTagObject, err := r.Tag(latestTag)
+	core.OnErrorFail(err, "failed to get Tag Object")
+	commits := getCommits(r, latestTagObject.Hash())
+	var commentsArray []workItem
+	for _, commit := range commits {
+		if isCommitConvention(commit.Comment) {
+			split := splitCommitMessage(commit.Comment)
+			commentsArray = append(commentsArray, workItem{ServiceName: split[0], Name: split[2], Hash: split[1]})
+		} else {
+			commentsArray = append(commentsArray, workItem{ServiceName: "untracked", Name: commit.Comment, Hash: ""})
+		}
+	}
+	sortingForMD := sortCommitsForMD(commentsArray, org, project)
+	writeToMD(sortingForMD, latestTag, bumbedVersion)
 }
 
 func getCommits(r *git.Repository, tagHash plumbing.Hash) []commit {
