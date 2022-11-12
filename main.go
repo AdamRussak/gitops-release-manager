@@ -4,6 +4,7 @@ import (
 	"giops-reelase-manager/pkg/core"
 	"giops-reelase-manager/pkg/gits"
 	"giops-reelase-manager/pkg/markdown"
+	"giops-reelase-manager/pkg/provider"
 	"os"
 
 	"github.com/go-git/go-git/v5"
@@ -12,7 +13,7 @@ import (
 )
 
 func main() {
-	directory, org, project := os.Args[1], os.Args[2], os.Args[3]
+	directory, org, project, pat := os.Args[1], os.Args[2], os.Args[3], os.Args[4]
 	r, err := git.PlainOpen(directory)
 	core.OnErrorFail(err, "faild to get git repo")
 	gits.CheckOutBranch(r, "main")
@@ -41,11 +42,11 @@ func main() {
 			commentsArray = append(commentsArray, workItem{ServiceName: "untracked", Name: commit.Comment, Hash: ""})
 		}
 	}
-	sortingForMD := sortCommitsForMD(commentsArray, org, project)
+	sortingForMD := sortCommitsForMD(commentsArray, org, project, pat, bumbedVersion)
 	markdown.WriteToMD(sortingForMD, latestTag, bumbedVersion)
 }
 
-func sortCommitsForMD(commits []workItem, org, project string) []string {
+func sortCommitsForMD(commits []workItem, org, project, pat, newVersion string) []string {
 	var returnedString []string
 	for c := range commits {
 		testString, itemInArray := gits.StringContains(returnedString, commits[c].ServiceName)
@@ -63,6 +64,7 @@ func sortCommitsForMD(commits []workItem, org, project string) []string {
 			} else {
 				returnedString = append(returnedString, "## "+commits[c].ServiceName+"\n"+KmdTable+"| "+"["+commits[c].Name+"]("+KadoUrl+org+"/"+project+"/_workitems//edit/"+workItem+")"+" | "+commits[c].Hash+" |\n")
 			}
+			provider.UpdateTag(org, pat, project, workItem, newVersion)
 		}
 
 	}
