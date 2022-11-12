@@ -1,6 +1,9 @@
 package core
 
 import (
+	"fmt"
+	"strings"
+
 	"github.com/hashicorp/go-version"
 	log "github.com/sirupsen/logrus"
 )
@@ -31,4 +34,22 @@ func EvaluateVersion(list []string) string {
 		} // GreaterThen
 	}
 	return latest
+}
+
+func BumpVersion(tag string) string {
+	test, _ := version.NewSemver(tag)
+	log.Info("before: " + tag)
+	segments := test.Segments()
+	return fmt.Sprint(segments[0]) + "." + fmt.Sprint(segments[1]) + "." + fmt.Sprint(segments[2]+1)
+}
+
+func SplitCommitMessage(comment string) []string {
+	var output []string
+	splited := strings.SplitAfter(comment, "]")
+	for _, s := range splited {
+		s = strings.TrimSuffix(s, "]")
+		s = strings.TrimPrefix(s, "[")
+		output = append(output, s)
+	}
+	return output
 }

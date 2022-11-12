@@ -4,6 +4,9 @@ import (
 	"fmt"
 	"giops-reelase-manager/pkg/core"
 	"os"
+	"regexp"
+	"strings"
+	"time"
 
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/config"
@@ -70,6 +73,19 @@ func fetchOrigin(repo *git.Repository, refSpecStr string) error {
 	}
 
 	return nil
+}
+
+func GetCommits(r *git.Repository, tagHash plumbing.Hash) []commit {
+	var comments []commit
+	until := time.Now()
+	fromCommit, _ := r.CommitObject(tagHash)
+	cIter, _ := r.Log(&git.LogOptions{Since: &fromCommit.Author.When, Until: &until})
+	// ... just iterates over the commits, printing it
+	_ = cIter.ForEach(func(c *object.Commit) error {
+		comments = append(comments, commit{Hash: c.Hash.String(), Comment: c.Message})
+		return nil
+	})
+	return comments
 }
 
 // git tag process
@@ -139,4 +155,24 @@ func pushTags(r *git.Repository) error {
 	}
 
 	return nil
+}
+
+// gitops commit logic
+func GetWorkItem(s string) string {
+	workItemRegex := regexp.MustCompile(`[0-9]+`)
+	return workItemRegex.FindString(s)
+}
+
+func IsCommitConvention(commit string) bool {
+	isCommit := regexp.MustCompile(`\[([a-zA-Z]+(-[a-zA-Z]+)+)]\[[A-Za-z0-9]+]\[[^\]]*]`)
+	return isCommit.MatchString(commit)
+}
+
+func StringContains(s []string, e string) (bool, int) {
+	for a := range s {
+		if strings.Contains(s[a], e) {
+			return true, a
+		}
+	}
+	return false, 0
 }
