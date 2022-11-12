@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"giops-reelase-manager/pkg/core"
 	"giops-reelase-manager/pkg/gits"
 	"os"
 	"regexp"
@@ -17,34 +18,34 @@ import (
 
 func main() {
 	directory := os.Args[1]
-	org := os.Args[2]
-	project := os.Args[3]
+	// org := os.Args[2]
+	// project := os.Args[3]
 	r, _ := git.PlainOpen(directory)
 	gits.CheckOutBranch(r, "main")
-	tagrefs, _ := r.Tags()
-	_ = tagrefs.ForEach(func(t *plumbing.Reference) error {
-		fmt.Println(t)
-		return nil
-	})
 	tags, _ := r.TagObjects()
+	var tagsArray []string
 	_ = tags.ForEach(func(t *object.Tag) error {
-		fmt.Println(t.Name)
-		bumbedVersion := bumpVersion(t.Name)
-		commits := getCommits(r, t.Target)
-		var commentsArray []workItem
-		for _, commit := range commits {
-			if isCommitConvention(commit.Comment) {
-				split := splitCommitMessage(commit.Comment)
-				commentsArray = append(commentsArray, workItem{ServiceName: split[0], Name: split[2], Hash: split[1]})
-			} else {
-				commentsArray = append(commentsArray, workItem{ServiceName: "untracked", Name: commit.Comment, Hash: ""})
-			}
-		}
-		sortingForMD := sortCommitsForMD(commentsArray, org, project)
-		writeToMD(sortingForMD, t.Name, bumbedVersion)
+		log.Infof("found tag %s", t.Name)
+		tagsArray = append(tagsArray, t.Name)
 		return nil
 	})
-
+	latestTag := core.EvaluateVersion(tagsArray)
+	latestTagObject, err := r.Tag(latestTag)
+	core.OnErrorFail(err, "failed to get Tag Object")
+	bumbedVersion := bumpVersion(latestTagObject.Name().String())
+	log.Println(bumbedVersion)
+	// commits := getCommits(r, latestTagObject.)
+	// var commentsArray []workItem
+	// for _, commit := range commits {
+	// 	if isCommitConvention(commit.Comment) {
+	// 		split := splitCommitMessage(commit.Comment)
+	// 		commentsArray = append(commentsArray, workItem{ServiceName: split[0], Name: split[2], Hash: split[1]})
+	// 	} else {
+	// 		commentsArray = append(commentsArray, workItem{ServiceName: "untracked", Name: commit.Comment, Hash: ""})
+	// 	}
+	// }
+	// sortingForMD := sortCommitsForMD(commentsArray, org, project)
+	// writeToMD(sortingForMD, t.Name, bumbedVersion)
 }
 
 func getCommits(r *git.Repository, tagHash plumbing.Hash) []commit {

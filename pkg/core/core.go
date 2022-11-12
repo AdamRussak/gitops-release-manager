@@ -1,6 +1,7 @@
 package core
 
 import (
+	"github.com/hashicorp/go-version"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -8,4 +9,26 @@ func OnErrorFail(err error, message string) {
 	if err != nil {
 		log.Fatalf("%s: %s\n", message, err)
 	}
+}
+
+// evaluate latest version from addon version list
+func EvaluateVersion(list []string) string {
+	var latest string
+	for _, v := range list {
+		var lt *version.Version
+		var err error
+		v1, err := version.NewVersion(v)
+		OnErrorFail(err, "Error Evaluating Version")
+		if latest == "" {
+			lt, err = version.NewVersion("0.0")
+		} else {
+			lt, err = version.NewVersion(latest)
+		}
+		OnErrorFail(err, "Error Evaluating Version")
+		// Options availabe
+		if v1.GreaterThan(lt) {
+			latest = v
+		} // GreaterThen
+	}
+	return latest
 }
