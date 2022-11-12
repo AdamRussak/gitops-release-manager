@@ -12,9 +12,7 @@ import (
 )
 
 func main() {
-	directory := os.Args[1]
-	org := os.Args[2]
-	project := os.Args[3]
+	directory, org, project := os.Args[1], os.Args[2], os.Args[3]
 	r, _ := git.PlainOpen(directory)
 	gits.CheckOutBranch(r, "main")
 	tags, _ := r.TagObjects()
