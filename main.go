@@ -33,8 +33,8 @@ func main() {
 	latestTagObject, err := r.Tag(latestTag)
 	log.Println(latestTagObject)
 	core.OnErrorFail(err, "failed to get Tag Object")
-	// bumbedVersion := bumpVersion(latestTagObject.Name().String())
-
+	bumbedVersion := bumpVersion(latestTagObject.Hash().String())
+	log.Infof("New Version is: %s", bumbedVersion)
 	// commits := getCommits(r, latestTagObject.)
 	// var commentsArray []workItem
 	// for _, commit := range commits {
