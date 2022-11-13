@@ -29,13 +29,13 @@ func (c FlagsOptions) MainGits() {
 	})
 	core.OnErrorFail(err, "err of ForEach tags process")
 	latestTag := core.EvaluateVersion(tagsArray)
-	bumbedVersion := core.BumpVersion(latestTag)
-	log.Infof("New Version is: %s", bumbedVersion)
+	newVersionTag := core.BumpVersion(latestTag)
+	log.Infof("New Version is: %s", newVersionTag)
 	latestTagObject, err := r.Tag(latestTag)
 	core.OnErrorFail(err, "failed to get Tag Object")
 	tagObjectCommit, err := r.TagObject(latestTagObject.Hash())
 	core.OnErrorFail(err, "failed to get tag object commit")
-	commits := GetCommits(r, tagObjectCommit.Target)
+	commits := GetCommits(r, tagObjectCommit.Target, plumbing.NewHash(c.CommitHash))
 	var commentsArray []markdown.WorkItem
 	for _, commit := range commits {
 		if IsCommitConvention(commit.Comment) {
@@ -45,8 +45,8 @@ func (c FlagsOptions) MainGits() {
 			commentsArray = append(commentsArray, markdown.WorkItem{ServiceName: "untracked", Name: commit.Comment, Hash: ""})
 		}
 	}
-	sortingForMD := markdown.SortCommitsForMD(commentsArray, c.Orgenization, c.Project, c.Pat, bumbedVersion)
-	markdown.WriteToMD(sortingForMD, latestTag, bumbedVersion)
+	sortingForMD := markdown.SortCommitsForMD(commentsArray, c.Orgenization, c.Project, c.Pat, newVersionTag)
+	markdown.WriteToMD(sortingForMD, latestTag, newVersionTag)
 }
 func CheckOutBranch(r *git.Repository, branch string) {
 	// ... retrieving the commit being pointed by HEAD
@@ -108,13 +108,12 @@ func fetchOrigin(repo *git.Repository, refSpecStr string) error {
 	return nil
 }
 
-func GetCommits(r *git.Repository, tagHash plumbing.Hash) []commit {
+func GetCommits(r *git.Repository, tagHash, newVersionHash plumbing.Hash) []commit {
 	var comments []commit
-	until := time.Now()
-	fromCommit, err := r.CommitObject(tagHash)
-	core.OnErrorFail(err, "fail to get commit object for tag")
-	log.Info(fromCommit)
-	cIter, err := r.Log(&git.LogOptions{Since: &fromCommit.Author.When, Until: &until})
+	until := getHashObject(r, newVersionHash)
+	fromCommit := getHashObject(r, tagHash)
+	from := fromCommit.Author.When.Add(time.Second * 1)
+	cIter, err := r.Log(&git.LogOptions{Since: &from, Until: &until.Author.When})
 	core.OnErrorFail(err, "fail to get commits from tag to now")
 	// ... just iterates over the commits, printing it
 	_ = cIter.ForEach(func(c *object.Commit) error {
@@ -198,4 +197,10 @@ func pushTags(r *git.Repository) error {
 func IsCommitConvention(commit string) bool {
 	isCommit := regexp.MustCompile(`\[([a-zA-Z]+(-[a-zA-Z]+)+)]\[[A-Za-z0-9]+]\[[^\]]*]`)
 	return isCommit.MatchString(commit)
+}
+
+func getHashObject(r *git.Repository, tagHash plumbing.Hash) *object.Commit {
+	fromCommit, err := r.CommitObject(tagHash)
+	core.OnErrorFail(err, "fail to get commit object for tag")
+	return fromCommit
 }
