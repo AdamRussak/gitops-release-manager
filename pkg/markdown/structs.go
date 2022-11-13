@@ -1,6 +1,6 @@
-package main
+package markdown
 
-type workItem struct {
+type WorkItem struct {
 	Name        string
 	ServiceName string
 	Hash        string

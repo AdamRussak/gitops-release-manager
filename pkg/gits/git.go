@@ -3,9 +3,9 @@ package gits
 import (
 	"fmt"
 	"giops-reelase-manager/pkg/core"
+	"giops-reelase-manager/pkg/markdown"
 	"os"
 	"regexp"
-	"strings"
 	"time"
 
 	"github.com/go-git/go-git/v5"
@@ -15,6 +15,39 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+func MainGits() {
+	directory, org, project, pat := os.Args[1], os.Args[2], os.Args[3], os.Args[4]
+	r, err := git.PlainOpen(directory)
+	core.OnErrorFail(err, "faild to get git repo")
+	CheckOutBranch(r, "main")
+	tags, _ := r.TagObjects()
+	var tagsArray []string
+	err = tags.ForEach(func(t *object.Tag) error {
+		log.Infof("found tag %s", t.Name)
+		tagsArray = append(tagsArray, t.Name)
+		return nil
+	})
+	core.OnErrorFail(err, "err of ForEach tags process")
+	latestTag := core.EvaluateVersion(tagsArray)
+	bumbedVersion := core.BumpVersion(latestTag)
+	log.Infof("New Version is: %s", bumbedVersion)
+	latestTagObject, err := r.Tag(latestTag)
+	core.OnErrorFail(err, "failed to get Tag Object")
+	tagObjectCommit, err := r.TagObject(latestTagObject.Hash())
+	core.OnErrorFail(err, "failed to get tag object commit")
+	commits := GetCommits(r, tagObjectCommit.Target)
+	var commentsArray []markdown.WorkItem
+	for _, commit := range commits {
+		if IsCommitConvention(commit.Comment) {
+			split := core.SplitCommitMessage(commit.Comment)
+			commentsArray = append(commentsArray, markdown.WorkItem{ServiceName: split[0], Name: split[2], Hash: split[1]})
+		} else {
+			commentsArray = append(commentsArray, markdown.WorkItem{ServiceName: "untracked", Name: commit.Comment, Hash: ""})
+		}
+	}
+	sortingForMD := markdown.SortCommitsForMD(commentsArray, org, project, pat, bumbedVersion)
+	markdown.WriteToMD(sortingForMD, latestTag, bumbedVersion)
+}
 func CheckOutBranch(r *git.Repository, branch string) {
 	// ... retrieving the commit being pointed by HEAD
 	log.Info("git show-ref --head HEAD")
@@ -161,21 +194,8 @@ func pushTags(r *git.Repository) error {
 }
 
 // gitops commit logic
-func GetWorkItem(s string) string {
-	workItemRegex := regexp.MustCompile(`[0-9]+`)
-	return workItemRegex.FindString(s)
-}
 
 func IsCommitConvention(commit string) bool {
 	isCommit := regexp.MustCompile(`\[([a-zA-Z]+(-[a-zA-Z]+)+)]\[[A-Za-z0-9]+]\[[^\]]*]`)
 	return isCommit.MatchString(commit)
-}
-
-func StringContains(s []string, e string) (bool, int) {
-	for a := range s {
-		if strings.Contains(s[a], e) {
-			return true, a
-		}
-	}
-	return false, 0
 }
