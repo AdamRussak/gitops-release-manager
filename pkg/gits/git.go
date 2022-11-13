@@ -15,9 +15,9 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func MainGits() {
-	directory, org, project, pat := os.Args[1], os.Args[2], os.Args[3], os.Args[4]
-	r, err := git.PlainOpen(directory)
+func (c FlagsOptions) MainGits() {
+
+	r, err := git.PlainOpen(c.RepoPath)
 	core.OnErrorFail(err, "faild to get git repo")
 	CheckOutBranch(r, "main")
 	tags, _ := r.TagObjects()
@@ -45,7 +45,7 @@ func MainGits() {
 			commentsArray = append(commentsArray, markdown.WorkItem{ServiceName: "untracked", Name: commit.Comment, Hash: ""})
 		}
 	}
-	sortingForMD := markdown.SortCommitsForMD(commentsArray, org, project, pat, bumbedVersion)
+	sortingForMD := markdown.SortCommitsForMD(commentsArray, c.Orgenization, c.Project, c.Pat, bumbedVersion)
 	markdown.WriteToMD(sortingForMD, latestTag, bumbedVersion)
 }
 func CheckOutBranch(r *git.Repository, branch string) {
