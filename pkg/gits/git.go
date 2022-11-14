@@ -15,8 +15,8 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+// https://github.com/src-d/go-git/issues/1101
 func (c FlagsOptions) MainGits() {
-
 	r, err := git.PlainOpen(c.RepoPath)
 	core.OnErrorFail(err, "faild to get git repo")
 	CheckOutBranch(r, "main")

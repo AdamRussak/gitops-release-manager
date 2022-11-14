@@ -3,9 +3,11 @@ module giops-reelase-manager
 go 1.19
 
 require (
+	github.com/evanphx/json-patch v0.5.2
 	github.com/go-git/go-git/v5 v5.4.2
 	github.com/hashicorp/go-version v1.6.0
 	github.com/sirupsen/logrus v1.4.1
+	github.com/spf13/cobra v1.6.1
 )
 
 require (
@@ -21,8 +23,8 @@ require (
 	github.com/kevinburke/ssh_config v0.0.0-20201106050909-4977a11b4351 // indirect
 	github.com/konsorten/go-windows-terminal-sequences v1.0.1 // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
+	github.com/pkg/errors v0.9.1 // indirect
 	github.com/sergi/go-diff v1.1.0 // indirect
-	github.com/spf13/cobra v1.6.1 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/xanzy/ssh-agent v0.3.0 // indirect
 	golang.org/x/crypto v0.0.0-20210421170649-83a5a9bb288b // indirect
