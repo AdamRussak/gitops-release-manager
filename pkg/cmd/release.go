@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"giops-reelase-manager/pkg/core"
 	"giops-reelase-manager/pkg/gits"
 
 	"github.com/spf13/cobra"
@@ -10,8 +11,9 @@ import (
 var apikey string
 var appkey string
 var release = &cobra.Command{
-	Use:   "release",
-	Short: "Send Metrics to Data Dog",
+	Use:    "release",
+	Short:  "Send Metrics to Data Dog",
+	PreRun: core.ToggleDebug,
 	Run: func(cmd *cobra.Command, args []string) {
 		option := gits.FlagsOptions{Output: o.Output, CommitHash: o.CommitHash, Orgenization: o.Orgenization, Pat: o.Pat, Project: o.Project, RepoPath: o.RepoPath, DryRun: o.DryRun, Gitpush: o.Gitpush}
 		option.MainGits()

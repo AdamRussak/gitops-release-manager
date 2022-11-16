@@ -1,6 +1,7 @@
 package gits
 
 import (
+	"errors"
 	"fmt"
 	"giops-reelase-manager/pkg/core"
 	"giops-reelase-manager/pkg/markdown"
@@ -24,7 +25,7 @@ func (c FlagsOptions) MainGits() {
 	tags, _ := r.TagObjects()
 	var tagsArray []string
 	err = tags.ForEach(func(t *object.Tag) error {
-		log.Infof("found tag %s", t.Name)
+		log.Debugf("found tag %s", t.Name)
 		tagsArray = append(tagsArray, t.Name)
 		return nil
 	})
@@ -86,7 +87,7 @@ func CheckOutBranch(r *git.Repository, branch string) {
 	log.Info("git show-ref --head HEAD")
 	ref, err = r.Head()
 	core.OnErrorFail(err, "failed in getting head")
-	fmt.Println(ref.Hash())
+	log.Debug(ref.Hash())
 }
 func fetchOrigin(repo *git.Repository, refSpecStr string) error {
 	remote, err := repo.Remote("origin")
@@ -101,9 +102,9 @@ func fetchOrigin(repo *git.Repository, refSpecStr string) error {
 		RefSpecs: refSpecs,
 	}); err != nil {
 		if err == git.NoErrAlreadyUpToDate {
-			fmt.Print("refs already up to date")
+			log.Info("refs already up to date")
 		} else {
-			return fmt.Errorf("fetch origin failed: %v", err)
+			return errors.New(fmt.Sprintf("fetch origin failed: %v", err))
 		}
 	}
 

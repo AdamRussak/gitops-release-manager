@@ -16,8 +16,6 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-// TODO: check if tags already exist in work-item or another version tag exist
-// TODO: get all relevant workitems and comare, to check if can get batch
 func CreateNewAzureDevopsWorkItemTag(organization, personalAccessToken, project, version string, workItems []string) {
 	intArray := converWorkItemToInt(workItems)
 	wiBatch := getWorkItemBatch(organization, personalAccessToken, project, intArray)
@@ -128,7 +126,6 @@ func checkExistingVersion(existingTags BatchWorkItems, newVersion string) []stri
 					log.Warningf("Work-Item n`%s already has a version %s as a Tag", fmt.Sprint(workItem.ID), s)
 				}
 			}
-			log.Info(counter)
 			if counter == 0 {
 				log.Infof("Work-Item n`%s needs a version %s as a Tag", fmt.Sprint(workItem.ID), newVersion)
 				workItemNeedTag = append(workItemNeedTag, fmt.Sprint(workItem.ID))

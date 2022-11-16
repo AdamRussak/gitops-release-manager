@@ -8,7 +8,7 @@ import (
 	"giops-reelase-manager/pkg/cmd"
 )
 
-// TODO: add creation of new tag
+// TODO: add creation of new tag : https://github.com/go-git/go-git/blob/master/_examples/tag-create-push/main.go
 // TODO: add push to new tag after creation (should be after succesfull finish of process)
 
 func main() {
