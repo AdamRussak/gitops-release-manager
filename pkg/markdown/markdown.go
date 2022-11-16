@@ -25,9 +25,9 @@ func SortCommitsForMD(commits []WorkItem, org, project, pat, newVersion string) 
 		} else {
 			workitemsID = append(workitemsID, workItem)
 			if testString {
-				returnedString[itemInArray] = returnedString[itemInArray] + "| " + "[" + commits[c].Name + "](" + KadoUrl + org + "/" + project + "/_workitems//edit/" + workItem + ")" + " | " + commits[c].Hash + " |\n"
+				returnedString[itemInArray] = returnedString[itemInArray] + "| " + "[" + commits[c].Name + "](" + KadoUrl + org + "/" + project + "/_workitems/edit/" + workItem + ")" + " | " + commits[c].Hash + " |\n"
 			} else {
-				returnedString = append(returnedString, "## "+commits[c].ServiceName+"\n"+KmdTable+"| "+"["+commits[c].Name+"]("+KadoUrl+org+"/"+project+"/_workitems//edit/"+workItem+")"+" | "+commits[c].Hash+" |\n")
+				returnedString = append(returnedString, "## "+commits[c].ServiceName+"\n"+KmdTable+"| "+"["+commits[c].Name+"]("+KadoUrl+org+"/"+project+"/_workitems/edit/"+workItem+")"+" | "+commits[c].Hash+" |\n")
 			}
 		}
 
