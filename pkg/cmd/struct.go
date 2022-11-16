@@ -7,6 +7,9 @@ type FlagsOptions struct {
 	Pat          string
 	Project      string
 	RepoPath     string
+	GitUser      string
+	GitEmail     string
+	GitKeyPath   string
 	DryRun       bool
 	Gitpush      bool
 }
