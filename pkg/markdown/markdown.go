@@ -2,14 +2,14 @@ package markdown
 
 import (
 	"fmt"
-	"giops-reelase-manager/pkg/provider"
 	"os"
 	"regexp"
 	"strings"
 )
 
-func SortCommitsForMD(commits []WorkItem, org, project, pat, newVersion string) []string {
+func SortCommitsForMD(commits []WorkItem, org, project, pat, newVersion string) ([]string, []string) {
 	var returnedString []string
+	var workitemsID []string
 	for c := range commits {
 		testString, itemInArray := stringContains(returnedString, commits[c].ServiceName)
 		workItem := getWorkItem(commits[c].Name)
@@ -21,16 +21,17 @@ func SortCommitsForMD(commits []WorkItem, org, project, pat, newVersion string) 
 
 			}
 		} else {
+			workitemsID = append(workitemsID, workItem)
 			if testString {
 				returnedString[itemInArray] = returnedString[itemInArray] + "| " + "[" + commits[c].Name + "](" + KadoUrl + org + "/" + project + "/_workitems//edit/" + workItem + ")" + " | " + commits[c].Hash + " |\n"
 			} else {
 				returnedString = append(returnedString, "## "+commits[c].ServiceName+"\n"+KmdTable+"| "+"["+commits[c].Name+"]("+KadoUrl+org+"/"+project+"/_workitems//edit/"+workItem+")"+" | "+commits[c].Hash+" |\n")
 			}
-			provider.UpdateTag(org, pat, project, workItem, newVersion)
 		}
 
 	}
-	return returnedString
+
+	return returnedString, workitemsID
 }
 
 func WriteToMD(commentsArray []string, oldVersion, header string) {

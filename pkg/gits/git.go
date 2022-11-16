@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"giops-reelase-manager/pkg/core"
 	"giops-reelase-manager/pkg/markdown"
+	"giops-reelase-manager/pkg/provider"
 	"os"
 	"regexp"
 	"time"
@@ -45,7 +46,8 @@ func (c FlagsOptions) MainGits() {
 			commentsArray = append(commentsArray, markdown.WorkItem{ServiceName: "untracked", Name: commit.Comment, Hash: ""})
 		}
 	}
-	sortingForMD := markdown.SortCommitsForMD(commentsArray, c.Orgenization, c.Project, c.Pat, newVersionTag)
+	sortingForMD, workitemsID := markdown.SortCommitsForMD(commentsArray, c.Orgenization, c.Project, c.Pat, newVersionTag)
+	provider.CreateNewAzureDevopsWorkItemTag(c.Orgenization, c.Pat, c.Project, newVersionTag, workitemsID)
 	markdown.WriteToMD(sortingForMD, latestTag, newVersionTag)
 }
 func CheckOutBranch(r *git.Repository, branch string) {
