@@ -24,7 +24,7 @@ func (c FlagsOptions) MainGits() {
 	r, err := git.PlainOpen(c.RepoPath)
 	core.OnErrorFail(err, "faild to get git repo")
 	CheckOutBranch(r, c.GitBranch)
-	latestTag := core.EvaluateVersion(getTagsArray(r))
+	latestTag := core.EvaluateVersion(c.getTagsArray(r))
 	newVersionTag := core.BumpVersion(latestTag)
 	log.Infof("New Version is: %s", newVersionTag)
 	latestTagObject, err := r.Tag(latestTag)
@@ -46,22 +46,21 @@ func (c FlagsOptions) MainGits() {
 	//TODO: creat validation that commit dosent have a tag already
 
 	sortingForMD, workitemsID := markdown.SortCommitsForMD(commentsArray, c.Orgenization, c.Project, c.Pat, newVersionTag)
-	provider.CreateNewAzureDevopsWorkItemTag(c.Orgenization, c.Pat, c.Project, newVersionTag, workitemsID)
-	setBool, err := SetTag(r, newVersionTag)
-	if setBool {
-		err = c.pushTags(r)
-		core.OnErrorFail(err, "failed to push the tag")
+	var setBool bool
+	if !c.DryRun {
+		provider.CreateNewAzureDevopsWorkItemTag(c.Orgenization, c.Pat, c.Project, newVersionTag, workitemsID)
+		setBool, err = SetTag(r, newVersionTag, c.CommitHash)
+
+		if setBool {
+			err = c.pushTags(r)
+			core.OnErrorFail(err, "failed to push the tag")
+		}
 	}
-	if setBool || !c.DryRun {
+	if setBool || c.DryRun {
 		markdown.WriteToMD(sortingForMD, latestTag, newVersionTag)
 	}
 }
 func CheckOutBranch(r *git.Repository, branch string) {
-	// ... retrieving the commit being pointed by HEAD
-	log.Info("git show-ref --head HEAD")
-	ref, err := r.Head()
-	core.OnErrorFail(err, "failed to get head")
-
 	w, err := r.Worktree()
 	core.OnErrorFail(err, "failed to get worktree")
 
@@ -84,15 +83,7 @@ func CheckOutBranch(r *git.Repository, branch string) {
 		err = w.Checkout(&branchCoOpts)
 		core.OnErrorFail(err, "failed to checkout branch")
 	}
-	core.OnErrorFail(err, "failed in process")
-
 	log.Info("checked out branch: %s", branch)
-
-	// ... retrieving the commit being pointed by HEAD (branch now)
-	log.Info("git show-ref --head HEAD")
-	ref, err = r.Head()
-	core.OnErrorFail(err, "failed in getting head")
-	log.Debug(ref.Hash())
 }
 func fetchOrigin(repo *git.Repository, refSpecStr string) error {
 	remote, err := repo.Remote("origin")
@@ -125,6 +116,7 @@ func GetCommits(r *git.Repository, tagHash, newVersionHash plumbing.Hash) []comm
 	core.OnErrorFail(err, "fail to get commits from tag to now")
 	// ... just iterates over the commits, printing it
 	_ = cIter.ForEach(func(c *object.Commit) error {
+		log.Tracef("found commit Hash: %s", c.Hash.String())
 		comments = append(comments, commit{Hash: c.Hash.String(), Comment: c.Message})
 		return nil
 	})
@@ -154,19 +146,13 @@ func tagExists(tag string, r *git.Repository) bool {
 	return res
 }
 
-func SetTag(r *git.Repository, tag string) (bool, error) {
+func SetTag(r *git.Repository, tag, newtagHash string) (bool, error) {
 	if tagExists(tag, r) {
 		log.Infof("tag %s already exists", tag)
 		return false, nil
 	}
 	log.Infof("Set tag %s", tag)
-	h, err := r.Head()
-	if err != nil {
-		log.Errorf("get HEAD error: %s", err)
-		return false, err
-	}
-
-	_, err = r.CreateTag(tag, h.Hash(), &git.CreateTagOptions{
+	_, err := r.CreateTag(tag, plumbing.NewHash(newtagHash), &git.CreateTagOptions{
 		Message: tag,
 	})
 
@@ -222,14 +208,25 @@ func (c FlagsOptions) publicKey() (*ssh.PublicKeys, error) {
 	return publicKey, err
 }
 
-func getTagsArray(r *git.Repository) []string {
+func (c FlagsOptions) getTagsArray(r *git.Repository) []string {
 	tags, _ := r.TagObjects()
 	var tagsArray []string
 	err := tags.ForEach(func(t *object.Tag) error {
 		log.Debugf("found tag %s", t.Name)
+		if c.CommitHash == t.Target.String() && isVersionTag(t.Name) {
+			core.OnErrorFail(errors.New(t.Name), "Already Taged with version: ")
+		}
 		tagsArray = append(tagsArray, t.Name)
 		return nil
 	})
 	core.OnErrorFail(err, "err of ForEach tags process")
 	return tagsArray
+}
+
+func isVersionTag(tag string) bool {
+	if core.IsSemVer(tag) {
+		return true
+	} else {
+		return false
+	}
 }

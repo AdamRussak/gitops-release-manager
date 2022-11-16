@@ -2,6 +2,7 @@ package core
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 
 	"github.com/hashicorp/go-version"
@@ -52,4 +53,10 @@ func SplitCommitMessage(comment string) []string {
 		output = append(output, s)
 	}
 	return output
+}
+
+func IsSemVer(tag string) bool {
+	isCommit := regexp.MustCompile(`^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$`)
+	boolinas := isCommit.MatchString(tag)
+	return boolinas
 }

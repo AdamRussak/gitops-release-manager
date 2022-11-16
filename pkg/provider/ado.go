@@ -8,7 +8,6 @@ import (
 	"giops-reelase-manager/pkg/core"
 	"io/ioutil"
 	"net/http"
-	"regexp"
 	"strconv"
 	"strings"
 
@@ -121,7 +120,7 @@ func checkExistingVersion(existingTags BatchWorkItems, newVersion string) []stri
 			split = strings.Split(workItem.Fields.SystemTags, ";")
 			var counter int
 			for _, s := range split {
-				if IsSemVer(s) {
+				if core.IsSemVer(s) {
 					counter++
 					log.Warningf("Work-Item n`%s already has a version %s as a Tag", fmt.Sprint(workItem.ID), s)
 				}
@@ -133,9 +132,4 @@ func checkExistingVersion(existingTags BatchWorkItems, newVersion string) []stri
 		}
 	}
 	return workItemNeedTag
-}
-func IsSemVer(tag string) bool {
-	isCommit := regexp.MustCompile(`^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$`)
-	boolinas := isCommit.MatchString(tag)
-	return boolinas
 }
