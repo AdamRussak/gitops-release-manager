@@ -21,6 +21,7 @@ type FlagsOptions struct {
 	GitUser      string
 	GitEmail     string
 	GitKeyPath   string
+	GitBranch    string
 	DryRun       bool
 	Gitpush      bool
 }

@@ -15,7 +15,7 @@ var release = &cobra.Command{
 	Short:  "Send Metrics to Data Dog",
 	PreRun: core.ToggleDebug,
 	Run: func(cmd *cobra.Command, args []string) {
-		option := gits.FlagsOptions{GitUser: o.GitUser, GitEmail: o.GitEmail, GitKeyPath: o.GitKeyPath, Output: o.Output, CommitHash: o.CommitHash, Orgenization: o.Orgenization, Pat: o.Pat, Project: o.Project, RepoPath: o.RepoPath, DryRun: o.DryRun, Gitpush: o.Gitpush}
+		option := gits.FlagsOptions{GitBranch: o.GitBranch, GitUser: o.GitUser, GitEmail: o.GitEmail, GitKeyPath: o.GitKeyPath, Output: o.Output, CommitHash: o.CommitHash, Orgenization: o.Orgenization, Pat: o.Pat, Project: o.Project, RepoPath: o.RepoPath, DryRun: o.DryRun, Gitpush: o.Gitpush}
 		option.MainGits()
 
 	},
@@ -28,9 +28,10 @@ func init() {
 	release.Flags().StringVar(&o.Pat, "pat", "", "Set PAT for API calls")
 	release.Flags().StringVar(&o.Project, "project", "", "Set Azure DevOps project")
 	release.Flags().StringVar(&o.RepoPath, "repo-path", ".", "Set Path to Git repo root")
+	release.Flags().StringVar(&o.GitBranch, "git-branch", "main", "Set Brnach to tag")
 	release.Flags().StringVar(&o.GitUser, "git-user", ".", "Set userName to tag with")
 	release.Flags().StringVar(&o.GitEmail, "git-email", ".", "Set email to tag with")
-	release.Flags().StringVar(&o.GitKeyPath, "git-keyPath", ".", "Set email to tag with")
+	release.Flags().StringVar(&o.GitKeyPath, "git-keyPath", "~/.ssh/id_rsa", "Set email to tag with")
 	release.Flags().BoolVar(&o.DryRun, "dry-run", false, "If true, only run a dry-run with cli output")
 	release.Flags().BoolVar(&o.Gitpush, "git-push", false, "If true, only run a dry-run with cli output")
 	rootCmd.AddCommand(release)

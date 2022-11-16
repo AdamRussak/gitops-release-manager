@@ -19,21 +19,12 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-// TODO: https://github.com/tcnksm/go-gitconfig
 // https://github.com/src-d/go-git/issues/1101
 func (c FlagsOptions) MainGits() {
 	r, err := git.PlainOpen(c.RepoPath)
 	core.OnErrorFail(err, "faild to get git repo")
-	CheckOutBranch(r, "main")
-	tags, _ := r.TagObjects()
-	var tagsArray []string
-	err = tags.ForEach(func(t *object.Tag) error {
-		log.Debugf("found tag %s", t.Name)
-		tagsArray = append(tagsArray, t.Name)
-		return nil
-	})
-	core.OnErrorFail(err, "err of ForEach tags process")
-	latestTag := core.EvaluateVersion(tagsArray)
+	CheckOutBranch(r, c.GitBranch)
+	latestTag := core.EvaluateVersion(getTagsArray(r))
 	newVersionTag := core.BumpVersion(latestTag)
 	log.Infof("New Version is: %s", newVersionTag)
 	latestTagObject, err := r.Tag(latestTag)
@@ -51,18 +42,19 @@ func (c FlagsOptions) MainGits() {
 		}
 	}
 
-	//TODO: add if to caheck when tag is needed
 	//TODO: add if dry-run flag is added
-	//TODO: add if workitem tags suceeded to create tag and push
-	//TODO: add if tag suceeded to markdown
+	//TODO: creat validation that commit dosent have a tag already
+
 	sortingForMD, workitemsID := markdown.SortCommitsForMD(commentsArray, c.Orgenization, c.Project, c.Pat, newVersionTag)
 	provider.CreateNewAzureDevopsWorkItemTag(c.Orgenization, c.Pat, c.Project, newVersionTag, workitemsID)
 	setBool, err := SetTag(r, newVersionTag)
 	if setBool {
-		err = pushTags(r)
+		err = c.pushTags(r)
 		core.OnErrorFail(err, "failed to push the tag")
 	}
-	markdown.WriteToMD(sortingForMD, latestTag, newVersionTag)
+	if setBool || !c.DryRun {
+		markdown.WriteToMD(sortingForMD, latestTag, newVersionTag)
+	}
 }
 func CheckOutBranch(r *git.Repository, branch string) {
 	// ... retrieving the commit being pointed by HEAD
@@ -185,8 +177,8 @@ func SetTag(r *git.Repository, tag string) (bool, error) {
 
 	return true, nil
 }
-func pushTags(r *git.Repository) error {
-	auth, err := publicKey("/home/coder/.ssh/id_rsa")
+func (c FlagsOptions) pushTags(r *git.Repository) error {
+	auth, err := c.publicKey()
 	core.OnErrorFail(err, "Failed to get the SSH")
 	po := &git.PushOptions{
 		RemoteName: "origin",
@@ -220,12 +212,24 @@ func getHashObject(r *git.Repository, tagHash plumbing.Hash) *object.Commit {
 	return fromCommit
 }
 
-func publicKey(filePath string) (*ssh.PublicKeys, error) {
+func (c FlagsOptions) publicKey() (*ssh.PublicKeys, error) {
 	var publicKey *ssh.PublicKeys
-	log.Debugf("path for SSH Key: %s", filePath)
-	sshKey, err := ioutil.ReadFile(filePath)
+	log.Debugf("path for SSH Key: %s", c.GitKeyPath)
+	sshKey, err := ioutil.ReadFile(c.GitKeyPath)
 	core.OnErrorFail(err, "failed to read SSH file")
 	publicKey, err = ssh.NewPublicKeys("", []byte(sshKey), "")
 	core.OnErrorFail(err, "fail to get publick key")
 	return publicKey, err
+}
+
+func getTagsArray(r *git.Repository) []string {
+	tags, _ := r.TagObjects()
+	var tagsArray []string
+	err := tags.ForEach(func(t *object.Tag) error {
+		log.Debugf("found tag %s", t.Name)
+		tagsArray = append(tagsArray, t.Name)
+		return nil
+	})
+	core.OnErrorFail(err, "err of ForEach tags process")
+	return tagsArray
 }
