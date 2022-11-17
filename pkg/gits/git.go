@@ -23,15 +23,16 @@ import (
 func (c FlagsOptions) MainGits() {
 	r, err := git.PlainOpen(c.RepoPath)
 	core.OnErrorFail(err, "faild to get git repo")
-	CheckOutBranch(r, c.GitBranch)
-	latestTag := core.EvaluateVersion(c.getTagsArray(r))
+	gitsOptions := GitsOptions{Output: c.Output, GitBranch: c.GitBranch, GitUser: c.GitUser, GitEmail: c.GitEmail, GitKeyPath: c.GitKeyPath, gitInstance: r, CommitHash: c.CommitHash, Orgenization: c.Orgenization, Pat: c.Pat, Project: c.Project, RepoPath: c.RepoPath, DryRun: c.DryRun, Gitpush: c.Gitpush}
+	gitsOptions.CheckOutBranch()
+	latestTag := core.EvaluateVersion(gitsOptions.getTagsArray())
 	newVersionTag := core.BumpVersion(latestTag)
 	log.Infof("New Version is: %s", newVersionTag)
 	latestTagObject, err := r.Tag(latestTag)
 	core.OnErrorFail(err, "failed to get Tag Object")
 	tagObjectCommit, err := r.TagObject(latestTagObject.Hash())
 	core.OnErrorFail(err, "failed to get tag object commit")
-	commits := GetCommits(r, tagObjectCommit.Target, plumbing.NewHash(c.CommitHash))
+	commits := gitsOptions.GetCommits(tagObjectCommit.Target, plumbing.NewHash(c.CommitHash))
 	var commentsArray []markdown.WorkItem
 	for _, commit := range commits {
 		if IsCommitConvention(commit.Comment) {
@@ -49,10 +50,9 @@ func (c FlagsOptions) MainGits() {
 	var setBool bool
 	if !c.DryRun {
 		provider.CreateNewAzureDevopsWorkItemTag(c.Orgenization, c.Pat, c.Project, newVersionTag, workitemsID)
-		setBool, err = SetTag(r, newVersionTag, c.CommitHash)
-
+		setBool, err = gitsOptions.SetTag(newVersionTag)
 		if setBool {
-			err = c.pushTags(r)
+			err = gitsOptions.pushTags()
 			core.OnErrorFail(err, "failed to push the tag")
 		}
 	}
@@ -60,33 +60,34 @@ func (c FlagsOptions) MainGits() {
 		markdown.WriteToMD(sortingForMD, latestTag, newVersionTag, c.Output)
 	}
 }
-func CheckOutBranch(r *git.Repository, branch string) {
-	w, err := r.Worktree()
+func (c GitsOptions) CheckOutBranch() {
+	w, err := c.gitInstance.Worktree()
 	core.OnErrorFail(err, "failed to get worktree")
 
 	// ... checking out branch
-	log.Infof("git checkout %s", branch)
+	log.Infof("git checkout %s", c.GitBranch)
 
-	branchRefName := plumbing.NewBranchReferenceName(branch)
+	branchRefName := plumbing.NewBranchReferenceName(c.GitBranch)
 	branchCoOpts := git.CheckoutOptions{
 		Branch: plumbing.ReferenceName(branchRefName),
 		Force:  true,
 	}
 	if err := w.Checkout(&branchCoOpts); err != nil {
-		log.Warning("local checkout of branch '%s' failed, will attempt to fetch remote branch of same name.", branch)
+		log.Warning("local checkout of branch '%s' failed, will attempt to fetch remote branch of same name.", c.GitBranch)
 		log.Warning("like `git checkout <branch>` defaulting to `git checkout -b <branch> --track <remote>/<branch>`")
 
-		mirrorRemoteBranchRefSpec := fmt.Sprintf("refs/heads/%s:refs/heads/%s", branch, branch)
-		err = fetchOrigin(r, mirrorRemoteBranchRefSpec)
+		mirrorRemoteBranchRefSpec := fmt.Sprintf("refs/heads/%s:refs/heads/%s", c.GitBranch, c.GitBranch)
+		err = c.fetchOrigin(mirrorRemoteBranchRefSpec)
 		core.OnErrorFail(err, "failed to featch branch origin")
 
 		err = w.Checkout(&branchCoOpts)
 		core.OnErrorFail(err, "failed to checkout branch")
 	}
-	log.Infof("checked out branch: %s", branch)
+	log.Infof("checked out branch: %s", c.GitBranch)
 }
-func fetchOrigin(repo *git.Repository, refSpecStr string) error {
-	remote, err := repo.Remote("origin")
+
+func (c GitsOptions) fetchOrigin(refSpecStr string) error {
+	remote, err := c.gitInstance.Remote("origin")
 	core.OnErrorFail(err, "failed in reachging Origin")
 
 	var refSpecs []config.RefSpec
@@ -107,12 +108,12 @@ func fetchOrigin(repo *git.Repository, refSpecStr string) error {
 	return nil
 }
 
-func GetCommits(r *git.Repository, tagHash, newVersionHash plumbing.Hash) []commit {
+func (c GitsOptions) GetCommits(tagHash, newVersionHash plumbing.Hash) []commit {
 	var comments []commit
-	until := getHashObject(r, newVersionHash)
-	fromCommit := getHashObject(r, tagHash)
+	until := c.getHashObject(newVersionHash)
+	fromCommit := c.getHashObject(tagHash)
 	from := fromCommit.Author.When.Add(time.Second * 1)
-	cIter, err := r.Log(&git.LogOptions{Since: &from, Until: &until.Author.When})
+	cIter, err := c.gitInstance.Log(&git.LogOptions{Since: &from, Until: &until.Author.When})
 	core.OnErrorFail(err, "fail to get commits from tag to now")
 	// ... just iterates over the commits, printing it
 	_ = cIter.ForEach(func(c *object.Commit) error {
@@ -124,9 +125,9 @@ func GetCommits(r *git.Repository, tagHash, newVersionHash plumbing.Hash) []comm
 }
 
 // git tag process
-func tagExists(tag string, r *git.Repository) bool {
+func (c GitsOptions) tagExists(tag string) bool {
 	tagFoundErr := "tag was found"
-	tags, err := r.TagObjects()
+	tags, err := c.gitInstance.TagObjects()
 	if err != nil {
 		log.Errorf("get tags error: %s", err)
 		return false
@@ -146,13 +147,13 @@ func tagExists(tag string, r *git.Repository) bool {
 	return res
 }
 
-func SetTag(r *git.Repository, tag, newtagHash string) (bool, error) {
-	if tagExists(tag, r) {
+func (c GitsOptions) SetTag(tag string) (bool, error) {
+	if c.tagExists(tag) {
 		log.Infof("tag %s already exists", tag)
 		return false, nil
 	}
 	log.Infof("Set tag %s", tag)
-	_, err := r.CreateTag(tag, plumbing.NewHash(newtagHash), &git.CreateTagOptions{
+	_, err := c.gitInstance.CreateTag(tag, plumbing.NewHash(c.CommitHash), &git.CreateTagOptions{
 		Message: tag,
 	})
 
@@ -163,7 +164,7 @@ func SetTag(r *git.Repository, tag, newtagHash string) (bool, error) {
 
 	return true, nil
 }
-func (c FlagsOptions) pushTags(r *git.Repository) error {
+func (c GitsOptions) pushTags() error {
 	auth, err := c.publicKey()
 	core.OnErrorFail(err, "Failed to get the SSH")
 	po := &git.PushOptions{
@@ -172,8 +173,7 @@ func (c FlagsOptions) pushTags(r *git.Repository) error {
 		RefSpecs:   []config.RefSpec{config.RefSpec("refs/tags/*:refs/tags/*")},
 		Auth:       auth,
 	}
-	err = r.Push(po)
-
+	err = c.gitInstance.Push(po)
 	if err != nil {
 		if err == git.NoErrAlreadyUpToDate {
 			log.Info("origin remote was up to date, no push done")
@@ -192,13 +192,13 @@ func IsCommitConvention(commit string) bool {
 	return isCommit.MatchString(commit)
 }
 
-func getHashObject(r *git.Repository, tagHash plumbing.Hash) *object.Commit {
-	fromCommit, err := r.CommitObject(tagHash)
+func (c GitsOptions) getHashObject(tagHash plumbing.Hash) *object.Commit {
+	fromCommit, err := c.gitInstance.CommitObject(tagHash)
 	core.OnErrorFail(err, "fail to get commit object for tag")
 	return fromCommit
 }
 
-func (c FlagsOptions) publicKey() (*ssh.PublicKeys, error) {
+func (c GitsOptions) publicKey() (*ssh.PublicKeys, error) {
 	var publicKey *ssh.PublicKeys
 	log.Debugf("path for SSH Key: %s", c.GitKeyPath)
 	sshKey, err := ioutil.ReadFile(c.GitKeyPath)
@@ -208,8 +208,8 @@ func (c FlagsOptions) publicKey() (*ssh.PublicKeys, error) {
 	return publicKey, err
 }
 
-func (c FlagsOptions) getTagsArray(r *git.Repository) []string {
-	tags, _ := r.TagObjects()
+func (c GitsOptions) getTagsArray() []string {
+	tags, _ := c.gitInstance.TagObjects()
 	var tagsArray []string
 	err := tags.ForEach(func(t *object.Tag) error {
 		log.Debugf("found tag %s", t.Name)
