@@ -1,4 +1,4 @@
-module giops-reelase-manager
+module gitops-release-manager
 
 go 1.19
 

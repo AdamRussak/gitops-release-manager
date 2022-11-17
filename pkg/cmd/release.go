@@ -1,8 +1,8 @@
 package cmd
 
 import (
-	"giops-reelase-manager/pkg/core"
-	"giops-reelase-manager/pkg/gits"
+	"gitops-release-manager/pkg/core"
+	"gitops-release-manager/pkg/gits"
 
 	"github.com/spf13/cobra"
 )

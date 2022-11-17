@@ -5,7 +5,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"giops-reelase-manager/pkg/core"
+	"gitops-release-manager/pkg/core"
 	"io/ioutil"
 	"net/http"
 	"strconv"

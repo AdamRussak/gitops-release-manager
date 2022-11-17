@@ -3,9 +3,9 @@ package gits
 import (
 	"errors"
 	"fmt"
-	"giops-reelase-manager/pkg/core"
-	"giops-reelase-manager/pkg/markdown"
-	"giops-reelase-manager/pkg/provider"
+	"gitops-release-manager/pkg/core"
+	"gitops-release-manager/pkg/markdown"
+	"gitops-release-manager/pkg/provider"
 	"io/ioutil"
 	"os"
 	"regexp"
@@ -57,7 +57,7 @@ func (c FlagsOptions) MainGits() {
 		}
 	}
 	if setBool || c.DryRun {
-		markdown.WriteToMD(sortingForMD, latestTag, newVersionTag)
+		markdown.WriteToMD(sortingForMD, latestTag, newVersionTag, c.Output)
 	}
 }
 func CheckOutBranch(r *git.Repository, branch string) {
@@ -65,7 +65,7 @@ func CheckOutBranch(r *git.Repository, branch string) {
 	core.OnErrorFail(err, "failed to get worktree")
 
 	// ... checking out branch
-	log.Info("git checkout %s", branch)
+	log.Infof("git checkout %s", branch)
 
 	branchRefName := plumbing.NewBranchReferenceName(branch)
 	branchCoOpts := git.CheckoutOptions{
@@ -83,7 +83,7 @@ func CheckOutBranch(r *git.Repository, branch string) {
 		err = w.Checkout(&branchCoOpts)
 		core.OnErrorFail(err, "failed to checkout branch")
 	}
-	log.Info("checked out branch: %s", branch)
+	log.Infof("checked out branch: %s", branch)
 }
 func fetchOrigin(repo *git.Repository, refSpecStr string) error {
 	remote, err := repo.Remote("origin")
@@ -214,7 +214,7 @@ func (c FlagsOptions) getTagsArray(r *git.Repository) []string {
 	err := tags.ForEach(func(t *object.Tag) error {
 		log.Debugf("found tag %s", t.Name)
 		if c.CommitHash == t.Target.String() && isVersionTag(t.Name) {
-			core.OnErrorFail(errors.New(t.Name), "Already Taged with version: ")
+			core.OnErrorFail(errors.New(t.Name), "Already Taged with version")
 		}
 		tagsArray = append(tagsArray, t.Name)
 		return nil

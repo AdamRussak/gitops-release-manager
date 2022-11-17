@@ -1,7 +1,7 @@
 package markdown
 
 import (
-	"giops-reelase-manager/pkg/core"
+	"gitops-release-manager/pkg/core"
 	"os"
 	"regexp"
 	"strings"
@@ -36,18 +36,18 @@ func SortCommitsForMD(commits []WorkItem, org, project, pat, newVersion string) 
 	return returnedString, workitemsID
 }
 
-func WriteToMD(commentsArray []string, oldVersion, header string) {
+func WriteToMD(commentsArray []string, oldVersion, header, path string) {
 	var writingOutput string
 	for _, array := range commentsArray {
 		writingOutput = writingOutput + array
 	}
 	header = "# " + oldVersion + "...." + header + "\n"
 	log.Debug(header + writingOutput)
-	writeToFile([]byte(header + writingOutput))
+	writeToFile([]byte(header+writingOutput), path)
 }
 
-func writeToFile(row []byte) {
-	err := os.WriteFile("/home/coder/project/gitops-release-manager/tests/test.md", row, 0644)
+func writeToFile(row []byte, path string) {
+	err := os.WriteFile(path, row, 0644)
 	core.OnErrorFail(err, "failed to save MD file")
 }
 func stringContains(s []string, e string) (bool, int) {
