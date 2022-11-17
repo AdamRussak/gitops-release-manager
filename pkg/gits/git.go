@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"gitops-release-manager/pkg/core"
 	"gitops-release-manager/pkg/markdown"
-	"gitops-release-manager/pkg/provider"
 	"io/ioutil"
 	"os"
 	"regexp"
@@ -20,7 +19,7 @@ import (
 )
 
 // https://github.com/src-d/go-git/issues/1101
-func (c FlagsOptions) MainGits() {
+func (c FlagsOptions) MainGits() (*git.Repository, []markdown.WorkItem, string, string) {
 	r, err := git.PlainOpen(c.RepoPath)
 	core.OnErrorFail(err, "faild to get git repo")
 	gitsOptions := GitsOptions{Output: c.Output, GitBranch: c.GitBranch, GitUser: c.GitUser, GitEmail: c.GitEmail, GitKeyPath: c.GitKeyPath, gitInstance: r, CommitHash: c.CommitHash, Orgenization: c.Orgenization, Pat: c.Pat, Project: c.Project, RepoPath: c.RepoPath, DryRun: c.DryRun, Gitpush: c.Gitpush}
@@ -42,23 +41,10 @@ func (c FlagsOptions) MainGits() {
 			commentsArray = append(commentsArray, markdown.WorkItem{ServiceName: "untracked", Name: commit.Comment, Hash: ""})
 		}
 	}
-
+	return r, commentsArray, newVersionTag, latestTag
 	//TODO: add if dry-run flag is added
 	//TODO: creat validation that commit dosent have a tag already
 
-	sortingForMD, workitemsID := markdown.SortCommitsForMD(commentsArray, c.Orgenization, c.Project, c.Pat, newVersionTag)
-	var setBool bool
-	if !c.DryRun {
-		provider.CreateNewAzureDevopsWorkItemTag(c.Orgenization, c.Pat, c.Project, newVersionTag, workitemsID)
-		setBool, err = gitsOptions.SetTag(newVersionTag)
-		if setBool {
-			err = gitsOptions.pushTags()
-			core.OnErrorFail(err, "failed to push the tag")
-		}
-	}
-	if setBool || c.DryRun {
-		markdown.WriteToMD(sortingForMD, latestTag, newVersionTag, c.Output)
-	}
 }
 func (c GitsOptions) CheckOutBranch() {
 	w, err := c.gitInstance.Worktree()
@@ -125,9 +111,9 @@ func (c GitsOptions) GetCommits(tagHash, newVersionHash plumbing.Hash) []commit 
 }
 
 // git tag process
-func (c GitsOptions) tagExists(tag string) bool {
+func tagExists(r *git.Repository, tag string) bool {
 	tagFoundErr := "tag was found"
-	tags, err := c.gitInstance.TagObjects()
+	tags, err := r.TagObjects()
 	if err != nil {
 		log.Errorf("get tags error: %s", err)
 		return false
@@ -147,13 +133,13 @@ func (c GitsOptions) tagExists(tag string) bool {
 	return res
 }
 
-func (c GitsOptions) SetTag(tag string) (bool, error) {
-	if c.tagExists(tag) {
+func (c FlagsOptions) SetTag(r *git.Repository, tag string) (bool, error) {
+	if tagExists(r, tag) {
 		log.Infof("tag %s already exists", tag)
 		return false, nil
 	}
 	log.Infof("Set tag %s", tag)
-	_, err := c.gitInstance.CreateTag(tag, plumbing.NewHash(c.CommitHash), &git.CreateTagOptions{
+	_, err := r.CreateTag(tag, plumbing.NewHash(c.CommitHash), &git.CreateTagOptions{
 		Message: tag,
 	})
 
@@ -164,7 +150,7 @@ func (c GitsOptions) SetTag(tag string) (bool, error) {
 
 	return true, nil
 }
-func (c GitsOptions) pushTags() error {
+func (c FlagsOptions) PushTags(r *git.Repository) error {
 	auth, err := c.publicKey()
 	core.OnErrorFail(err, "Failed to get the SSH")
 	po := &git.PushOptions{
@@ -173,7 +159,7 @@ func (c GitsOptions) pushTags() error {
 		RefSpecs:   []config.RefSpec{config.RefSpec("refs/tags/*:refs/tags/*")},
 		Auth:       auth,
 	}
-	err = c.gitInstance.Push(po)
+	err = r.Push(po)
 	if err != nil {
 		if err == git.NoErrAlreadyUpToDate {
 			log.Info("origin remote was up to date, no push done")
@@ -198,7 +184,7 @@ func (c GitsOptions) getHashObject(tagHash plumbing.Hash) *object.Commit {
 	return fromCommit
 }
 
-func (c GitsOptions) publicKey() (*ssh.PublicKeys, error) {
+func (c FlagsOptions) publicKey() (*ssh.PublicKeys, error) {
 	var publicKey *ssh.PublicKeys
 	log.Debugf("path for SSH Key: %s", c.GitKeyPath)
 	sshKey, err := ioutil.ReadFile(c.GitKeyPath)

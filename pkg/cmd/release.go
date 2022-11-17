@@ -3,6 +3,8 @@ package cmd
 import (
 	"gitops-release-manager/pkg/core"
 	"gitops-release-manager/pkg/gits"
+	"gitops-release-manager/pkg/markdown"
+	"gitops-release-manager/pkg/provider"
 
 	"github.com/spf13/cobra"
 )
@@ -16,7 +18,21 @@ var release = &cobra.Command{
 	PreRun: core.ToggleDebug,
 	Run: func(cmd *cobra.Command, args []string) {
 		option := gits.FlagsOptions{GitBranch: o.GitBranch, GitUser: o.GitUser, GitEmail: o.GitEmail, GitKeyPath: o.GitKeyPath, Output: o.Output, CommitHash: o.CommitHash, Orgenization: o.Orgenization, Pat: o.Pat, Project: o.Project, RepoPath: o.RepoPath, DryRun: o.DryRun, Gitpush: o.Gitpush}
-		option.MainGits()
+
+		r, commentsArray, newVersionTag, latestTag := option.MainGits()
+		sortingForMD, workitemsID := markdown.SortCommitsForMD(commentsArray, option.Orgenization, option.Project, option.Pat, newVersionTag)
+		var setBool bool
+		if !option.DryRun {
+			provider.CreateNewAzureDevopsWorkItemTag(option.Orgenization, option.Pat, option.Project, newVersionTag, workitemsID)
+			setBool, err := option.SetTag(r, newVersionTag)
+			if setBool {
+				err = option.PushTags(r)
+				core.OnErrorFail(err, "failed to push the tag")
+			}
+		}
+		if setBool || option.DryRun {
+			markdown.WriteToMD(sortingForMD, latestTag, newVersionTag, option.Output)
+		}
 
 	},
 }
