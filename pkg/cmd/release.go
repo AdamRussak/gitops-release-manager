@@ -18,7 +18,6 @@ var release = &cobra.Command{
 	PreRun: core.ToggleDebug,
 	Run: func(cmd *cobra.Command, args []string) {
 		option := gits.FlagsOptions{GitBranch: o.GitBranch, GitUser: o.GitUser, GitEmail: o.GitEmail, GitKeyPath: o.GitKeyPath, Output: o.Output, CommitHash: o.CommitHash, Orgenization: o.Orgenization, Pat: o.Pat, Project: o.Project, RepoPath: o.RepoPath, DryRun: o.DryRun, Gitpush: o.Gitpush}
-
 		r, commentsArray, newVersionTag, latestTag := option.MainGits()
 		sortingForMD, workitemsID := markdown.SortCommitsForMD(commentsArray, option.Orgenization, option.Project, option.Pat, newVersionTag)
 		var setBool bool
@@ -33,7 +32,6 @@ var release = &cobra.Command{
 		if setBool || option.DryRun {
 			markdown.WriteToMD(sortingForMD, latestTag, newVersionTag, option.Output)
 		}
-
 	},
 }
 
