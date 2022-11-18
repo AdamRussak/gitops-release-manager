@@ -59,6 +59,17 @@ func stringContains(s []string, e string) (bool, int) {
 	return false, 0
 }
 func getWorkItem(s string) string {
-	workItemRegex := regexp.MustCompile(`[0-9]+`)
-	return workItemRegex.FindString(s)
+	var ret string
+	if strings.Contains(s, "Merged PR") {
+		WorkItems := regexp.MustCompile(`#[0-9]+`)
+		matches := WorkItems.Find([]byte(s))
+		ret = strings.TrimPrefix(string(matches), "#")
+		log.Debugf("%s is work Item \n", ret)
+	} else {
+		WorkItems := regexp.MustCompile(`[0-9]+`)
+		matches := WorkItems.Find([]byte(s))
+		log.Debugf("%s is work Item \n", string(matches))
+		ret = string(matches)
+	}
+	return ret
 }
