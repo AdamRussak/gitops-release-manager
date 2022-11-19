@@ -16,22 +16,20 @@ import (
 )
 
 func CreateNewAzureDevopsWorkItemTag(organization, personalAccessToken, project, version string, workItems []string) {
-	intArray := converWorkItemToInt(workItems)
-	wiBatch := getWorkItemBatch(organization, personalAccessToken, project, intArray)
+	commnads := BaseInfo{BaseUrl: "https://dev.azure.com/" + organization + "/" + project, BaseCreds: "Basic " + base64.StdEncoding.EncodeToString([]byte(" :"+personalAccessToken))}
+	intArray := commnads.converWorkItemToInt(workItems)
+	wiBatch := commnads.getWorkItemBatch(intArray)
 	newTagsNeeded := checkExistingVersion(tagValidator(wiBatch), version)
 	for _, u := range newTagsNeeded {
-		UpdateWorkItemTag(organization, personalAccessToken, project, u, version)
+		commnads.UpdateWorkItemTag(u, version)
 	}
 
 }
-func UpdateWorkItemTag(organization, personalAccessToken, project, id, version string) {
-	organizationUrl := "https://dev.azure.com/" + organization + "/" + project
-	p := base64.StdEncoding.EncodeToString([]byte(" :" + personalAccessToken))
-	as := "Basic " + p
+func (b BaseInfo) UpdateWorkItemTag(id, version string) {
 	client := &http.Client{}
-	req, err := http.NewRequest("PATCH", organizationUrl+"/_apis/wit/workitems/"+id+"?api-version=7.0", bytes.NewBuffer(tagBody(fmt.Sprintf(`[{"op": "add","path": "/fields/System.Tags","value": "%s"}]`, version))))
+	req, err := http.NewRequest("PATCH", b.BaseUrl+"/_apis/wit/workitems/"+id+"?api-version=7.0", bytes.NewBuffer(tagBody(fmt.Sprintf(`[{"op": "add","path": "/fields/System.Tags","value": "%s"}]`, version))))
 	core.OnErrorFail(err, "faild to create http request")
-	req.Header.Add("Authorization", as)
+	req.Header.Add("Authorization", b.BaseCreds)
 	req.Header.Add("Content-Type", "application/json-patch+json")
 	resp, err := client.Do(req)
 	core.OnErrorFail(err, "faild to use http request")
@@ -49,10 +47,7 @@ func UpdateWorkItemTag(organization, personalAccessToken, project, id, version s
 	}
 }
 
-func getWorkItemBatch(organization, personalAccessToken, project string, ids []int) []byte {
-	organizationUrl := "https://dev.azure.com/" + organization + "/" + project
-	p := base64.StdEncoding.EncodeToString([]byte(" :" + personalAccessToken))
-	as := "Basic " + p
+func (b BaseInfo) getWorkItemBatch(ids []int) []byte {
 	var intString string
 	for _, i := range ids {
 		if intString == "" {
@@ -60,14 +55,13 @@ func getWorkItemBatch(organization, personalAccessToken, project string, ids []i
 		} else {
 			intString = intString + "," + fmt.Sprint(i)
 		}
-
 	}
 	client := &http.Client{}
 	payload := fmt.Sprintf(`{"ids": [%s],"fields": ["System.Id","System.Tags"]}`, intString)
 	log.Debug(payload)
-	req, err := http.NewRequest("POST", organizationUrl+"/_apis/wit/workitemsbatch?api-version=7.0", bytes.NewBuffer([]byte(payload)))
+	req, err := http.NewRequest("POST", b.BaseUrl+"/_apis/wit/workitemsbatch?api-version=7.0", bytes.NewBuffer([]byte(payload)))
 	core.OnErrorFail(err, "faild to create http request")
-	req.Header.Add("Authorization", as)
+	req.Header.Add("Authorization", b.BaseCreds)
 	req.Header.Add("Content-Type", "application/json")
 	resp, err := client.Do(req)
 	core.OnErrorFail(err, "faild to use http request")
@@ -83,13 +77,32 @@ func getWorkItemBatch(organization, personalAccessToken, project string, ids []i
 		return nil
 	}
 }
+func (b BaseInfo) isWorkItem(id string) bool {
+	client := &http.Client{}
+	req, err := http.NewRequest("GET", b.BaseUrl+"/_apis/wit/workitems/"+id+"?api-version=7.0", nil)
+	core.OnErrorFail(err, "faild to create http request")
+	req.Header.Add("Authorization", b.BaseCreds)
+	req.Header.Add("Content-Type", "application/json")
+	resp, err := client.Do(req)
+	core.OnErrorFail(err, "faild to use http request")
+	if resp.StatusCode == 200 {
+		return true
+	} else {
+		body, err := ioutil.ReadAll(resp.Body)
+		core.OnErrorFail(err, "faild to read http body")
+		log.Warningf("body: %s with Status code: %s"+string(body), fmt.Sprint(resp.StatusCode))
+		return false
+	}
+}
 
-func converWorkItemToInt(wi []string) []int {
+func (b BaseInfo) converWorkItemToInt(wi []string) []int {
 	var intReturn []int
 	for _, i := range wi {
-		in, err := strconv.Atoi(i)
-		core.OnErrorFail(err, "failed to convert string to int")
-		intReturn = append(intReturn, in)
+		if b.isWorkItem(i) {
+			in, err := strconv.Atoi(i)
+			core.OnErrorFail(err, "failed to convert string to int")
+			intReturn = append(intReturn, in)
+		}
 	}
 	return intReturn
 }

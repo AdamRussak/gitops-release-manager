@@ -12,3 +12,8 @@ type BatchWorkItems struct {
 		URL string `json:"url,omitempty"`
 	} `json:"value,omitempty"`
 }
+
+type BaseInfo struct {
+	BaseUrl   string
+	BaseCreds string
+}
