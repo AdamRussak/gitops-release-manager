@@ -48,5 +48,8 @@ func init() {
 	release.Flags().StringVar(&o.GitKeyPath, "git-keyPath", "~/.ssh/id_rsa", "Set email to tag with")
 	release.Flags().BoolVar(&o.DryRun, "dry-run", false, "If true, only run a dry-run with cli output")
 	release.Flags().BoolVar(&o.Gitpush, "git-push", false, "If true, only run a dry-run with cli output")
+	release.MarkFlagsRequiredTogether("org", "project", "pat")
+	release.MarkFlagRequired("hash")
+	release.MarkFlagRequired("repo-path")
 	rootCmd.AddCommand(release)
 }
