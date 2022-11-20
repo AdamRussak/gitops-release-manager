@@ -13,6 +13,14 @@
             "args": ["/home/coder/project/gitops-release-manager","adamrussak","go-release-mamnger-test"]
         },
         {
+            "name": "rpi Launch",
+            "type": "go",
+            "request": "launch",
+            "mode": "debug",
+            "program": "${file}",
+            "args": ["release" ,"--repo-path", "/home/adam/code/go-release-mamnger-test", "--org", "adamrussak", "--project", "go-release-mamnger-test", "--pat", "gbmsxvwmhypdcevfk4tztfli33jrko23mlukbbh5xr7iohomkseq" ,"--hash", "a332c891db4843a4b52e4c409ea25d6e742fe7ff", "--git-keyPath", "~/.ssh/id_rsa", "-v", "--dry-run"]
+        },
+        {
             "name": "Launch Package",
             "type": "go",
             "request": "launch",

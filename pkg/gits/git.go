@@ -174,7 +174,7 @@ func (c FlagsOptions) PushTags(r *git.Repository) error {
 // gitops commit logic
 
 func IsCommitConvention(commit string) bool {
-	isCommit := regexp.MustCompile(`\[([a-zA-Z]+(-[a-zA-Z]+)+)]\[[A-Za-z0-9]+]\[[^\]]*]`)
+	isCommit := regexp.MustCompile(`\[([A-Za-z0-9]+(-[A-Za-z0-9]+)+)]\[[A-Za-z0-9]+]\[[^\]]*]`)
 	return isCommit.MatchString(commit)
 }
 

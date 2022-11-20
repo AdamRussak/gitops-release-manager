@@ -52,7 +52,7 @@ func writeToFile(row []byte, path string) {
 }
 func stringContains(s []string, e string) (bool, int) {
 	for a := range s {
-		if strings.Contains(s[a], e) {
+		if strings.Contains(s[a], "## "+e) {
 			return true, a
 		}
 	}
