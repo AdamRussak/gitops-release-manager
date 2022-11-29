@@ -6,7 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"gitops-release-manager/pkg/core"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"strconv"
 	"strings"
@@ -15,6 +15,11 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+// TODO: need to add a Get for releated work-items (per work-item)
+// TODO: scann for child and other non-Parent work-items in close status
+// TODO: list all work items that are closed and are linked to commited work-items
+// TODO: tag all work-items with version tag
+// TODO: validate work-item exist beofre tag, send warning if dosnt exist
 func CreateNewAzureDevopsWorkItemTag(organization, personalAccessToken, project, version string, workItems []string) {
 	commnads := BaseInfo{BaseUrl: "https://dev.azure.com/" + organization + "/" + project, BaseCreds: "Basic " + base64.StdEncoding.EncodeToString([]byte(" :"+personalAccessToken))}
 	intArray := commnads.converWorkItemToInt(workItems)
@@ -26,20 +31,14 @@ func CreateNewAzureDevopsWorkItemTag(organization, personalAccessToken, project,
 
 }
 func (b BaseInfo) UpdateWorkItemTag(id, version string) {
-	client := &http.Client{}
-	req, err := http.NewRequest("PATCH", b.BaseUrl+"/_apis/wit/workitems/"+id+"?api-version=7.0", bytes.NewBuffer(tagBody(fmt.Sprintf(`[{"op": "add","path": "/fields/System.Tags","value": "%s"}]`, version))))
-	core.OnErrorFail(err, "faild to create http request")
-	req.Header.Add("Authorization", b.BaseCreds)
-	req.Header.Add("Content-Type", "application/json-patch+json")
-	resp, err := client.Do(req)
-	core.OnErrorFail(err, "faild to use http request")
+	resp := b.baseApiCall("PATCH", "/_apis/wit/workitems/"+id, fmt.Sprintf(`[{"op": "add","path": "/fields/System.Tags","value": "%s"}]`, version))
 	//We Read the response body on the line below.
 	if resp.StatusCode == 412 {
 		log.Warningf("Work-Item N`%s already has a tag", id)
 	} else if resp.StatusCode == 200 {
 		log.Infof("Work-Item N`%s was taged with version %s", id, version)
 	} else {
-		body, err := ioutil.ReadAll(resp.Body)
+		body, err := io.ReadAll(resp.Body)
 		core.OnErrorFail(err, "faild to read http body")
 		//Convert the body to type string
 		sb := string(body)
@@ -56,21 +55,13 @@ func (b BaseInfo) getWorkItemBatch(ids []int) []byte {
 			intString = intString + "," + fmt.Sprint(i)
 		}
 	}
-	client := &http.Client{}
-	payload := fmt.Sprintf(`{"ids": [%s],"fields": ["System.Id","System.Tags"]}`, intString)
-	log.Debug(payload)
-	req, err := http.NewRequest("POST", b.BaseUrl+"/_apis/wit/workitemsbatch?api-version=7.0", bytes.NewBuffer([]byte(payload)))
-	core.OnErrorFail(err, "faild to create http request")
-	req.Header.Add("Authorization", b.BaseCreds)
-	req.Header.Add("Content-Type", "application/json")
-	resp, err := client.Do(req)
-	core.OnErrorFail(err, "faild to use http request")
+	resp := b.baseApiCall("POST", "/_apis/wit/workitemsbatch", fmt.Sprintf(`{"ids": [%s],"fields": ["System.Id","System.Tags"]}`, intString))
 	if resp.StatusCode == 200 {
-		body, err := ioutil.ReadAll(resp.Body)
+		body, err := io.ReadAll(resp.Body)
 		core.OnErrorFail(err, "faild to read http body")
 		return body
 	} else {
-		body, err := ioutil.ReadAll(resp.Body)
+		body, err := io.ReadAll(resp.Body)
 		core.OnErrorFail(err, "faild to read http body")
 		log.Warning(string("body: " + fmt.Sprint(resp.StatusCode)))
 		log.Warning(string("body: " + string(body)))
@@ -78,17 +69,11 @@ func (b BaseInfo) getWorkItemBatch(ids []int) []byte {
 	}
 }
 func (b BaseInfo) isWorkItem(id string) bool {
-	client := &http.Client{}
-	req, err := http.NewRequest("GET", b.BaseUrl+"/_apis/wit/workitems/"+id+"?api-version=7.0", nil)
-	core.OnErrorFail(err, "faild to create http request")
-	req.Header.Add("Authorization", b.BaseCreds)
-	req.Header.Add("Content-Type", "application/json")
-	resp, err := client.Do(req)
-	core.OnErrorFail(err, "faild to use http request")
+	resp := b.baseApiCall("GET", "/_apis/wit/workitems/"+id, "")
 	if resp.StatusCode == 200 {
 		return true
 	} else {
-		body, err := ioutil.ReadAll(resp.Body)
+		body, err := io.ReadAll(resp.Body)
 		core.OnErrorFail(err, "faild to read http body")
 		log.Warningf("body: %s with Status code: %s"+string(body), fmt.Sprint(resp.StatusCode))
 		return false
@@ -145,4 +130,30 @@ func checkExistingVersion(existingTags BatchWorkItems, newVersion string) []stri
 		}
 	}
 	return workItemNeedTag
+}
+
+func (b BaseInfo) baseApiCall(callType, apiPath, body string) *http.Response {
+	payload := getPayload(body)
+	client := &http.Client{}
+	req, err := http.NewRequest(callType, b.BaseUrl+apiPath+"?api-version=7.0", payload)
+	core.OnErrorFail(err, "faild to create http request")
+	req.Header.Add("Authorization", b.BaseCreds)
+	req.Header.Add("Content-Type", ContentType(callType))
+	resp, err := client.Do(req)
+	core.OnErrorFail(err, "faild to use http request")
+	return resp
+}
+func getPayload(body string) *bytes.Buffer {
+	if body != "" {
+		return bytes.NewBuffer(tagBody(body))
+	} else {
+		return nil
+	}
+}
+func ContentType(callType string) string {
+	if callType == "PATCH" {
+		return "application/json-patch+json"
+	} else {
+		return "application/json"
+	}
 }

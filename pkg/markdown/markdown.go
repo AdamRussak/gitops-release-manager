@@ -9,12 +9,15 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+// sort workitems after they have been splited in the gits pkg
 func SortCommitsForMD(commits []WorkItem, org, project, pat, newVersion string) ([]string, []string) {
 	var returnedString []string
 	var workitemsID []string
 	for c := range commits {
+		// check if already exist in string for MD, returns bool and int (location of item in array if exist)
 		testString, itemInArray := stringContains(returnedString, commits[c].ServiceName)
 		workItem := getWorkItem(commits[c].Name)
+		// untracked is for items not in commit convention
 		if commits[c].ServiceName == "untracked" {
 			if testString {
 				returnedString[itemInArray] = returnedString[itemInArray] + "| " + commits[c].Name + " | " + commits[c].Hash + " |\n"
@@ -32,7 +35,7 @@ func SortCommitsForMD(commits []WorkItem, org, project, pat, newVersion string) 
 		}
 
 	}
-
+	// returns an array of strings for MD and list of work Items for ADO
 	return returnedString, workitemsID
 }
 
