@@ -21,6 +21,14 @@
             "args": ["release" ,"--repo-path", "/home/adam/code/go-release-mamnger-test", "--org", "adamrussak", "--project", "go-release-mamnger-test", "--pat", "gbmsxvwmhypdcevfk4tztfli33jrko23mlukbbh5xr7iohomkseq" ,"--hash", "a332c891db4843a4b52e4c409ea25d6e742fe7ff", "--git-keyPath", "~/.ssh/id_rsa", "-v", "--dry-run"]
         },
         {
+            "name": "work Launch",
+            "type": "go",
+            "request": "launch",
+            "mode": "debug",
+            "program": "${file}",
+            "args": ["release" ,"--repo-path", "/home/adam/projectes/DevOps/ps-helm-adam-playground", "--org", "ahitl", "--project", "devops", "--pat", "664hpbyl4lbiz7p2xndwklyeftzwuiuflzk5gmmgazgvygdnphga" ,"--hash", "844dc50f0edcf4b96c5c30117df389b115197e62", "--git-keyPath", "~/.ssh/id_rsa", "-v", "--dry-run"]
+        },
+        {
             "name": "Launch Package",
             "type": "go",
             "request": "launch",

@@ -42,7 +42,6 @@ func (c FlagsOptions) MainGits() (*git.Repository, []markdown.WorkItem, string, 
 		}
 	}
 	return r, commentsArray, newVersionTag, latestTag
-	//TODO: add if dry-run flag is added
 	//TODO: creat validation that commit dosent have a tag already
 
 }
@@ -133,6 +132,7 @@ func tagExists(r *git.Repository, tag string) bool {
 	return res
 }
 
+// setting the tag with the new version in the commit
 func (c FlagsOptions) SetTag(r *git.Repository, tag string) (bool, error) {
 	if tagExists(r, tag) {
 		log.Infof("tag %s already exists", tag)
@@ -150,6 +150,8 @@ func (c FlagsOptions) SetTag(r *git.Repository, tag string) (bool, error) {
 
 	return true, nil
 }
+
+// pushing the new tag the the remote repo
 func (c FlagsOptions) PushTags(r *git.Repository) error {
 	auth, err := c.publicKey()
 	core.OnErrorFail(err, "Failed to get the SSH")
@@ -172,18 +174,20 @@ func (c FlagsOptions) PushTags(r *git.Repository) error {
 }
 
 // gitops commit logic
-
+// validates the commit comment is with the agreed convention
 func IsCommitConvention(commit string) bool {
 	isCommit := regexp.MustCompile(`\[([A-Za-z0-9]+(-[A-Za-z0-9]+)+)]\[[A-Za-z0-9]+]\[[^\]]*]`)
 	return isCommit.MatchString(commit)
 }
 
+// getting the commit from a Hash
 func (c GitsOptions) getHashObject(tagHash plumbing.Hash) *object.Commit {
 	fromCommit, err := c.gitInstance.CommitObject(tagHash)
 	core.OnErrorFail(err, "fail to get commit object for tag")
 	return fromCommit
 }
 
+// loadiong the ssh for the push tag
 func (c FlagsOptions) publicKey() (*ssh.PublicKeys, error) {
 	var publicKey *ssh.PublicKeys
 	log.Debugf("path for SSH Key: %s", c.GitKeyPath)
@@ -194,6 +198,7 @@ func (c FlagsOptions) publicKey() (*ssh.PublicKeys, error) {
 	return publicKey, err
 }
 
+// getting all the tags in the repo
 func (c GitsOptions) getTagsArray() []string {
 	tags, _ := c.gitInstance.TagObjects()
 	var tagsArray []string
@@ -209,6 +214,7 @@ func (c GitsOptions) getTagsArray() []string {
 	return tagsArray
 }
 
+// validating the tag is in SemVer convention
 func isVersionTag(tag string) bool {
 	if core.IsSemVer(tag) {
 		return true

@@ -5,3 +5,9 @@ type WorkItem struct {
 	ServiceName string
 	Hash        string
 }
+
+type WorkItemOutput struct {
+	Hash     string
+	itemID   int
+	workItem string
+}

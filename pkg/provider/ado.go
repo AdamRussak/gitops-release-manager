@@ -8,18 +8,23 @@ import (
 	"gitops-release-manager/pkg/core"
 	"io"
 	"net/http"
+	"regexp"
 	"strconv"
 	"strings"
 
-	jsonpatch "github.com/evanphx/json-patch"
 	log "github.com/sirupsen/logrus"
 )
 
+// TODO get work-item title
 // TODO: need to add a Get for releated work-items (per work-item)
-// TODO: scann for child and other non-Parent work-items in close status
-// TODO: list all work items that are closed and are linked to commited work-items
 // TODO: tag all work-items with version tag
 // TODO: validate work-item exist beofre tag, send warning if dosnt exist
+func GetWorkItemBatchStruct(organization, project, pat string, workItems []string) BatchWorkItems {
+	commnads := BaseInfo{BaseUrl: "https://dev.azure.com/" + organization + "/" + project, BaseCreds: "Basic " + base64.StdEncoding.EncodeToString([]byte(" :"+pat))}
+	intArray := commnads.converWorkItemToInt(workItems)
+	wiBatch := commnads.getWorkItemBatch(intArray)
+	return tagValidator(wiBatch)
+}
 func CreateNewAzureDevopsWorkItemTag(organization, personalAccessToken, project, version string, workItems []string) {
 	commnads := BaseInfo{BaseUrl: "https://dev.azure.com/" + organization + "/" + project, BaseCreds: "Basic " + base64.StdEncoding.EncodeToString([]byte(" :"+personalAccessToken))}
 	intArray := commnads.converWorkItemToInt(workItems)
@@ -55,7 +60,8 @@ func (b BaseInfo) getWorkItemBatch(ids []int) []byte {
 			intString = intString + "," + fmt.Sprint(i)
 		}
 	}
-	resp := b.baseApiCall("POST", "/_apis/wit/workitemsbatch", fmt.Sprintf(`{"ids": [%s],"fields": ["System.Id","System.Tags"]}`, intString))
+	log.Debugf("The Work Items Array: %s", intString)
+	resp := b.baseApiCall("POST", "/_apis/wit/workitemsbatch", fmt.Sprintf(`{"ids": [%s],"fields": ["System.Id","System.Tags","System.Title"]}`, intString))
 	if resp.StatusCode == 200 {
 		body, err := io.ReadAll(resp.Body)
 		core.OnErrorFail(err, "faild to read http body")
@@ -83,7 +89,9 @@ func (b BaseInfo) isWorkItem(id string) bool {
 func (b BaseInfo) converWorkItemToInt(wi []string) []int {
 	var intReturn []int
 	for _, i := range wi {
-		if b.isWorkItem(i) {
+		var isInt = regexp.MustCompile(`^[0-9]+$`)
+		if isInt.Match([]byte(i)) {
+			log.Debugf("Checking WorkItem ID: %s", i)
 			in, err := strconv.Atoi(i)
 			core.OnErrorFail(err, "failed to convert string to int")
 			intReturn = append(intReturn, in)
@@ -94,9 +102,10 @@ func (b BaseInfo) converWorkItemToInt(wi []string) []int {
 
 func tagBody(body string) []byte {
 	log.Debug(body)
-	payLoad, err := jsonpatch.DecodePatch([]byte(body))
+	pingJSON := Payload{}
+	err := json.Unmarshal([]byte(body), &pingJSON)
 	core.OnErrorFail(err, "faild to create Payload")
-	p, err := json.Marshal(payLoad)
+	p, err := json.Marshal(pingJSON)
 	core.OnErrorFail(err, "faild to marshel Payload")
 	log.Debug(string(p))
 	return []byte(p)
@@ -133,6 +142,7 @@ func checkExistingVersion(existingTags BatchWorkItems, newVersion string) []stri
 }
 
 func (b BaseInfo) baseApiCall(callType, apiPath, body string) *http.Response {
+	log.Debug("Entered baseApiCall function")
 	payload := getPayload(body)
 	client := &http.Client{}
 	req, err := http.NewRequest(callType, b.BaseUrl+apiPath+"?api-version=7.0", payload)
@@ -144,7 +154,9 @@ func (b BaseInfo) baseApiCall(callType, apiPath, body string) *http.Response {
 	return resp
 }
 func getPayload(body string) *bytes.Buffer {
+	log.Debugf("The body of the Http call: %s", body)
 	if body != "" {
+		log.Debugf("The body of the Http call: %s", body)
 		return bytes.NewBuffer(tagBody(body))
 	} else {
 		return nil
