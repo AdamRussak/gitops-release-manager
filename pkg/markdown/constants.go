@@ -1,4 +1,4 @@
 package markdown
 
-const KmdTable = "| work-item | Work-item ID | Hash |\n |---|---|---|\n"
+const KmdTable = "| Work-item ID | Work-item | Hash |\n |---|---|---|\n"
 const KadoUrl = "https://dev.azure.com/"

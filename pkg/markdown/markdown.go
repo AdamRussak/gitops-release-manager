@@ -100,9 +100,9 @@ func createMDStrings(commits []WorkItem, org, project, pat string, workItemOutpu
 				}
 			} else {
 				if testString {
-					returnedString[itemInArray] = returnedString[itemInArray] + "| " + "[" + workItems.Value[relevantWI].Fields.SystemTitle + "](" + KadoUrl + org + "/" + project + "/_workitems/edit/" + fmt.Sprint(workItems.Value[relevantWI].ID) + ")" + " | " + fmt.Sprint(workItems.Value[relevantWI].ID) + " | " + commits[c].Hash + " |\n"
+					returnedString[itemInArray] = returnedString[itemInArray] + " | " + fmt.Sprint(workItems.Value[relevantWI].ID) + "| " + "[" + workItems.Value[relevantWI].Fields.SystemTitle + "](" + KadoUrl + org + "/" + project + "/_workitems/edit/" + fmt.Sprint(workItems.Value[relevantWI].ID) + ")" + " | " + commits[c].Hash + " |\n"
 				} else {
-					returnedString = append(returnedString, "## "+commits[c].ServiceName+"\n"+KmdTable+"| "+"["+workItems.Value[relevantWI].Fields.SystemTitle+"]("+KadoUrl+org+"/"+project+"/_workitems/edit/"+fmt.Sprint(workItems.Value[relevantWI].ID)+")"+" | "+fmt.Sprint(workItems.Value[relevantWI].ID)+" | "+commits[c].Hash+" |\n")
+					returnedString = append(returnedString, "## "+commits[c].ServiceName+"\n"+KmdTable+" | " + fmt.Sprint(workItems.Value[relevantWI].ID) + " | "+"["+workItems.Value[relevantWI].Fields.SystemTitle+"]("+KadoUrl+org+"/"+project+"/_workitems/edit/"+fmt.Sprint(workItems.Value[relevantWI].ID)+")"+" | "+commits[c].Hash+" |\n")
 				}
 			}
 		}
