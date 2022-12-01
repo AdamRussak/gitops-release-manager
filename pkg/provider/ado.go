@@ -59,7 +59,7 @@ func (b BaseInfo) getWorkItemBatch(ids []int) []byte {
 		}
 	}
 	log.Debugf("The Work Items Array: %s", intString)
-	resp := b.baseApiCall("POST", "/_apis/wit/workitemsbatch", fmt.Sprintf(`{"ids": [%s],"fields": ["System.Id","System.Tags","System.Title"]}`, intString))
+	resp := b.baseApiCall("POST", "/_apis/wit/workitemsbatch", fmt.Sprintf(`{"ids": [%s],"fields": ["System.Id","System.Tags","System.Title","System.WorkItemType"]}`, intString))
 	if resp.StatusCode == 200 {
 		body, err := io.ReadAll(resp.Body)
 		core.OnErrorFail(err, "faild to read http body")
@@ -67,8 +67,8 @@ func (b BaseInfo) getWorkItemBatch(ids []int) []byte {
 	} else {
 		body, err := io.ReadAll(resp.Body)
 		core.OnErrorFail(err, "faild to read http body")
-		log.Warning(string("body: " + fmt.Sprint(resp.StatusCode)))
-		log.Warning(string("body: " + string(body)))
+		log.Warningf("StatusCode: %s \n body: %s ", fmt.Sprint(resp.StatusCode), string(body))
+		log.Warning()
 		return nil
 	}
 }
@@ -143,6 +143,7 @@ func checkExistingVersion(existingTags BatchWorkItems, newVersion string) []stri
 	return workItemNeedTag
 }
 
+// FEATURE: add WI type
 func (b BaseInfo) baseApiCall(callType, apiPath, body string) *http.Response {
 	log.Debug("Entered baseApiCall function")
 	payload := getPayload(body)
@@ -164,6 +165,8 @@ func (b BaseInfo) baseApiCall(callType, apiPath, body string) *http.Response {
 	core.OnErrorFail(err, "faild to use http request")
 	return resp
 }
+
+// Gets the payload for the Body
 func getPayload(body string) *bytes.Buffer {
 	if body != "" {
 		log.Debugf("The body of the Http call: %s", body)
@@ -173,6 +176,7 @@ func getPayload(body string) *bytes.Buffer {
 		return nil
 	}
 }
+
 func ContentType(callType string) string {
 	if callType == "PATCH" {
 		log.Trace("Content-Type: application/json-patch+json")

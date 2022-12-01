@@ -12,6 +12,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+// TODO: add WI TYPE betwwee wiID and title
 // sort workitems after they have been splited in the gits pkg
 func SortCommitsForMD(commits []WorkItem, org, project, pat string) ([]string, []string) {
 	var workitemsID []string
@@ -100,9 +101,9 @@ func createMDStrings(commits []WorkItem, org, project, pat string, workItemOutpu
 				}
 			} else {
 				if testString {
-					returnedString[itemInArray] = returnedString[itemInArray] + " | " + fmt.Sprint(workItems.Value[relevantWI].ID) + " | " + "[" + workItems.Value[relevantWI].Fields.SystemTitle + "](" + KadoUrl + org + "/" + project + "/_workitems/edit/" + fmt.Sprint(workItems.Value[relevantWI].ID) + ")" + " | " + commits[c].Hash + " |\n"
+					returnedString[itemInArray] = returnedString[itemInArray] + " | " + fmt.Sprint(workItems.Value[relevantWI].ID) + " | " + workItems.Value[relevantWI].Fields.SystemWorkItemType + " | " + "[" + workItems.Value[relevantWI].Fields.SystemTitle + "](" + KadoUrl + org + "/" + project + "/_workitems/edit/" + fmt.Sprint(workItems.Value[relevantWI].ID) + ")" + " | " + commits[c].Hash + " |\n"
 				} else {
-					returnedString = append(returnedString, "## "+commits[c].ServiceName+"\n"+KmdTable+" | "+fmt.Sprint(workItems.Value[relevantWI].ID)+" | "+"["+workItems.Value[relevantWI].Fields.SystemTitle+"]("+KadoUrl+org+"/"+project+"/_workitems/edit/"+fmt.Sprint(workItems.Value[relevantWI].ID)+")"+" | "+commits[c].Hash+" |\n")
+					returnedString = append(returnedString, "## "+commits[c].ServiceName+"\n"+KmdTable+" | "+fmt.Sprint(workItems.Value[relevantWI].ID)+" | "+workItems.Value[relevantWI].Fields.SystemWorkItemType+" | "+"["+workItems.Value[relevantWI].Fields.SystemTitle+"]("+KadoUrl+org+"/"+project+"/_workitems/edit/"+fmt.Sprint(workItems.Value[relevantWI].ID)+")"+" | "+commits[c].Hash+" |\n")
 				}
 			}
 		}

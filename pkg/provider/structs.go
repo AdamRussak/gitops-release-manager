@@ -6,9 +6,10 @@ type BatchWorkItems struct {
 		ID     int `json:"id,omitempty"`
 		Rev    int `json:"rev,omitempty"`
 		Fields struct {
-			SystemID    int    `json:"System.Id,omitempty"`
-			SystemTags  string `json:"System.Tags,omitempty"`
-			SystemTitle string `json:"System.Title,omitempty"`
+			SystemID           int    `json:"System.Id,omitempty"`
+			SystemTags         string `json:"System.Tags,omitempty"`
+			SystemTitle        string `json:"System.Title,omitempty"`
+			SystemWorkItemType string `json:"System.WorkItemType,omitempty"`
 		} `json:"fields,omitempty"`
 		URL string `json:"url,omitempty"`
 	} `json:"value,omitempty"`
