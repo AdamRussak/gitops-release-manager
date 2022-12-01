@@ -15,8 +15,6 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-// TODO get work-item title
-// TODO: need to add a Get for releated work-items (per work-item)
 // TODO: tag all work-items with version tag
 // TODO: validate work-item exist beofre tag, send warning if dosnt exist
 func GetWorkItemBatchStruct(organization, project, pat string, workItems []string) BatchWorkItems {
@@ -75,6 +73,7 @@ func (b BaseInfo) getWorkItemBatch(ids []int) []byte {
 	}
 }
 func (b BaseInfo) isWorkItem(id string) bool {
+	log.Tracef("Entered isWorkItem function with id: %s", id)
 	resp := b.baseApiCall("GET", "/_apis/wit/workitems/"+id, "")
 	if resp.StatusCode == 200 {
 		return true
@@ -92,9 +91,12 @@ func (b BaseInfo) converWorkItemToInt(wi []string) []int {
 		var isInt = regexp.MustCompile(`^[0-9]+$`)
 		if isInt.Match([]byte(i)) {
 			log.Debugf("Checking WorkItem ID: %s", i)
-			in, err := strconv.Atoi(i)
-			core.OnErrorFail(err, "failed to convert string to int")
-			intReturn = append(intReturn, in)
+			if b.isWorkItem(i) {
+				in, err := strconv.Atoi(i)
+				core.OnErrorFail(err, "failed to convert string to int")
+				intReturn = append(intReturn, in)
+			}
+
 		}
 	}
 	return intReturn
@@ -145,7 +147,16 @@ func (b BaseInfo) baseApiCall(callType, apiPath, body string) *http.Response {
 	log.Debug("Entered baseApiCall function")
 	payload := getPayload(body)
 	client := &http.Client{}
-	req, err := http.NewRequest(callType, b.BaseUrl+apiPath+"?api-version=7.0", payload)
+	log.Tracef("Full Api Url: %s\n      Call type: %s", b.BaseUrl+apiPath+"?api-version=7.0", callType)
+	var req *http.Request
+	var err error
+	switch callType {
+	case "GET":
+		req, err = http.NewRequest("GET", b.BaseUrl+apiPath+"?api-version=7.0", nil)
+	case "POST":
+		req, err = http.NewRequest("POST", b.BaseUrl+apiPath+"?api-version=7.0", payload)
+	}
+
 	core.OnErrorFail(err, "faild to create http request")
 	req.Header.Add("Authorization", b.BaseCreds)
 	req.Header.Add("Content-Type", ContentType(callType))
@@ -154,18 +165,20 @@ func (b BaseInfo) baseApiCall(callType, apiPath, body string) *http.Response {
 	return resp
 }
 func getPayload(body string) *bytes.Buffer {
-	log.Debugf("The body of the Http call: %s", body)
 	if body != "" {
 		log.Debugf("The body of the Http call: %s", body)
 		return bytes.NewBuffer(tagBody(body))
 	} else {
+		log.Debug("No Body")
 		return nil
 	}
 }
 func ContentType(callType string) string {
 	if callType == "PATCH" {
+		log.Trace("Content-Type: application/json-patch+json")
 		return "application/json-patch+json"
 	} else {
+		log.Trace("Content-Type: application/json")
 		return "application/json"
 	}
 }

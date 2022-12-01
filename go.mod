@@ -3,7 +3,6 @@ module gitops-release-manager
 go 1.19
 
 require (
-	github.com/evanphx/json-patch v0.5.2
 	github.com/fatih/structs v1.1.0
 	github.com/go-git/go-git/v5 v5.4.2
 	github.com/hashicorp/go-version v1.6.0
@@ -32,7 +31,6 @@ require (
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/onsi/ginkgo v1.16.5 // indirect
 	github.com/onsi/gomega v1.24.1 // indirect
-	github.com/pkg/errors v0.9.1 // indirect
 	github.com/sergi/go-diff v1.1.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/xanzy/ssh-agent v0.3.0 // indirect
