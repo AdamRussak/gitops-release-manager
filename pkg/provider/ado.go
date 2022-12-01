@@ -16,7 +16,6 @@ import (
 )
 
 // TODO: tag all work-items with version tag
-// TODO: validate work-item exist beofre tag, send warning if dosnt exist
 func GetWorkItemBatchStruct(organization, project, pat string, workItems []string) BatchWorkItems {
 	commnads := BaseInfo{BaseUrl: "https://dev.azure.com/" + organization + "/" + project, BaseCreds: "Basic " + base64.StdEncoding.EncodeToString([]byte(" :"+pat))}
 	intArray := commnads.converWorkItemToInt(workItems)
@@ -143,7 +142,6 @@ func checkExistingVersion(existingTags BatchWorkItems, newVersion string) []stri
 	return workItemNeedTag
 }
 
-// FEATURE: add WI type
 func (b BaseInfo) baseApiCall(callType, apiPath, body string) *http.Response {
 	log.Debug("Entered baseApiCall function")
 	payload := getPayload(body)

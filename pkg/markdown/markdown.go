@@ -12,7 +12,6 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-// TODO: add WI TYPE betwwee wiID and title
 // sort workitems after they have been splited in the gits pkg
 func SortCommitsForMD(commits []WorkItem, org, project, pat string) ([]string, []string) {
 	var workitemsID []string
