@@ -83,10 +83,11 @@ func createMDStrings(commits []WorkItem, org, project, pat string, workItemOutpu
 		relevantWI, wIExist := getReleventWI(workItems, commits[c], returnedString)
 		// untracked is for items not in commit convention
 		if commits[c].ServiceName == "untracked" || commits[c].ServiceName == "No related work items" {
+			log.Debug(commits[c].Name)
 			if testString {
-				returnedString[itemInArray] = returnedString[itemInArray] + "| " + commits[c].Name + " | " + commits[c].Hash + " |\n"
+				returnedString[itemInArray] = returnedString[itemInArray] + "| NA | NA |" + commits[c].Name + " | NA |\n"
 			} else {
-				returnedString = append(returnedString, "## "+commits[c].ServiceName+"\n"+KmdTable+"| "+commits[c].Name+" | "+commits[c].Hash+" |\n")
+				returnedString = append(returnedString, "## "+commits[c].ServiceName+"\n"+KmdTable+"| NA | NA |"+commits[c].Name+"| NA |\n")
 			}
 		} else if wIExist {
 			continue

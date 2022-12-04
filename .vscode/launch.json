@@ -26,7 +26,7 @@
             "request": "launch",
             "mode": "debug",
             "program": "${file}",
-            "args": ["release" ,"--repo-path", "/home/adam/projectes/DevOps/ps-helm-adam-playground", "--org", "ahitl", "--project", "devops", "--pat", "664hpbyl4lbiz7p2xndwklyeftzwuiuflzk5gmmgazgvygdnphga" ,"--hash", "844dc50f0edcf4b96c5c30117df389b115197e62", "--git-keyPath", "~/.ssh/id_rsa", "-v", "--dry-run"]
+            "args": ["release" ,"--repo-path", "/home/adam/projectes/poultrysense/ps-helm", "--org", "ahitl", "--project", "devops", "--pat", "664hpbyl4lbiz7p2xndwklyeftzwuiuflzk5gmmgazgvygdnphga" ,"--hash", "8c4b0a6b6db69fe27941f194de23f8f52144a69f", "--git-keyPath", "~/.ssh/id_rsa", "-v", "--dry-run"]
         },
         {
             "name": "Launch Package",
