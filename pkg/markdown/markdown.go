@@ -1,7 +1,6 @@
 package markdown
 
 import (
-	"encoding/json"
 	"fmt"
 	"gitops-release-manager/pkg/core"
 	"gitops-release-manager/pkg/provider"
@@ -50,6 +49,7 @@ func mdContains(s []string, e string) (bool, int) {
 	}
 	return false, 0
 }
+
 func getWorkItem(s string) []string {
 	var ret []string
 	if strings.Contains(s, KlogResp) {
@@ -103,11 +103,6 @@ func getReleventWI(wiStruct provider.BatchWorkItems, commit WorkItem, mdArray []
 	return 0, true
 }
 
-func DebugPrintStruct(st interface{}) {
-	out, _ := json.Marshal(st)
-	log.Debug(string(out))
-}
-
 func mdAddLine(itemInArray int, commit WorkItem, wIExist, testString bool, returnedString []string, workItem provider.WorkItem, adPath string) []string {
 	if commit.ServiceName == "untracked" || commit.ServiceName == KlogResp {
 		comentName := strings.ReplaceAll(commit.Name, "\n", " ")
@@ -118,7 +113,6 @@ func mdAddLine(itemInArray int, commit WorkItem, wIExist, testString bool, retur
 			returnedString = append(returnedString, "## "+commit.ServiceName+"\n"+KmdTable+"| NA | NA |"+comentName+"| NA |\n")
 		}
 	} else if !wIExist {
-		// DebugPrintStruct(relevantWI)
 		if testString {
 			returnedString[itemInArray] = returnedString[itemInArray] + " | " + fmt.Sprint(workItem.ID) + " | " + workItem.Fields.SystemWorkItemType + " | " + "[" + workItem.Fields.SystemTitle + "](" + KadoUrl + adPath + "/_workitems/edit/" + fmt.Sprint(workItem.ID) + ")" + " | " + commit.Hash + " |\n"
 		} else {
