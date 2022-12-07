@@ -7,12 +7,6 @@ type commit struct {
 	Comment string
 }
 
-type workItem struct {
-	Name        string
-	ServiceName string
-	Hash        string
-}
-
 type FlagsOptions struct {
 	Output       string
 	CommitHash   string

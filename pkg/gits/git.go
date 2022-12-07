@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"gitops-release-manager/pkg/core"
 	"gitops-release-manager/pkg/markdown"
-	"io/ioutil"
 	"os"
 	"regexp"
 	"time"
@@ -191,7 +190,7 @@ func (c GitsOptions) getHashObject(tagHash plumbing.Hash) *object.Commit {
 func (c FlagsOptions) publicKey() (*ssh.PublicKeys, error) {
 	var publicKey *ssh.PublicKeys
 	log.Debugf("path for SSH Key: %s", c.GitKeyPath)
-	sshKey, err := ioutil.ReadFile(c.GitKeyPath)
+	sshKey, err := os.ReadFile(c.GitKeyPath)
 	core.OnErrorFail(err, "failed to read SSH file")
 	publicKey, err = ssh.NewPublicKeys("", []byte(sshKey), "")
 	core.OnErrorFail(err, "fail to get publick key")
