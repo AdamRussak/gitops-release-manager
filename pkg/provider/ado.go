@@ -41,7 +41,7 @@ func (b BaseInfo) UpdateWorkItemTag(id, version string) {
 		log.Infof("Work-Item N`%s was taged with version %s", id, version)
 	} else {
 		body, err := io.ReadAll(resp.Body)
-		core.OnErrorFail(err, "faild to read http body")
+		core.OnErrorFail(err, KlogError)
 		//Convert the body to type string
 		sb := string(body)
 		log.Info(sb)
@@ -61,11 +61,11 @@ func (b BaseInfo) getWorkItemBatch(ids []int) []byte {
 	resp := b.baseApiCall("POST", "/_apis/wit/workitemsbatch", fmt.Sprintf(`{"ids": [%s],"fields": ["System.Id","System.Tags","System.Title","System.WorkItemType"]}`, intString))
 	if resp.StatusCode == 200 {
 		body, err := io.ReadAll(resp.Body)
-		core.OnErrorFail(err, "faild to read http body")
+		core.OnErrorFail(err, KlogError)
 		return body
 	} else {
 		body, err := io.ReadAll(resp.Body)
-		core.OnErrorFail(err, "faild to read http body")
+		core.OnErrorFail(err, KlogError)
 		log.Warningf("StatusCode: %s \n body: %s ", fmt.Sprint(resp.StatusCode), string(body))
 		log.Warning()
 		return nil
@@ -78,7 +78,7 @@ func (b BaseInfo) isWorkItem(id string) bool {
 		return true
 	} else {
 		body, err := io.ReadAll(resp.Body)
-		core.OnErrorFail(err, "faild to read http body")
+		core.OnErrorFail(err, KlogError)
 		log.Warningf("body: %s with Status code: %s"+string(body), fmt.Sprint(resp.StatusCode))
 		return false
 	}
