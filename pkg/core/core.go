@@ -50,7 +50,9 @@ func SplitCommitMessage(comment string) []string {
 	for _, s := range splited {
 		s = strings.TrimSuffix(s, "]")
 		s = strings.TrimPrefix(s, "[")
-		output = append(output, s)
+		if s != "" {
+			output = append(output, s)
+		}
 	}
 	return output
 }
