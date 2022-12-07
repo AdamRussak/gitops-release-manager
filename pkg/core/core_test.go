@@ -7,6 +7,13 @@ import (
 
 var testVersion = "1.1.1"
 
+func TestEvaluateVersion(t *testing.T) {
+	versionTestList := []string{"1.0.0", "1.1.1", "7.9.8", "8.2.2", "2.1.3"}
+	latestVersion := EvaluateVersion(versionTestList)
+	if latestVersion != "8.2.2" {
+		t.Fatalf(`EvaluateVersion(%s) = %s,should have been %s`, versionTestList, latestVersion, "8.2.2")
+	}
+}
 func TestBumpVersion(t *testing.T) {
 	checkBump := BumpVersion(testVersion)
 	if checkBump != "1.1.2" {
