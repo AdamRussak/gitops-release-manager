@@ -17,10 +17,10 @@ jobs:
         with:
           go-version: '1.19'
           check-latest: true
-      - name: Get gometalinter
-        run: go get -u gopkg.in/alecthomas/gometalinter.v2 && /home/runner/go/bin/gometalinter.v2 --install
-      - name: Run gometalinter
-        run: $GOPATH/bin/gometalinter.v2 . > gometalinter-report.out || true
+      # - name: Get gometalinter
+      #   run: go get -u gopkg.in/alecthomas/gometalinter.v2 && /home/runner/go/bin/gometalinter.v2 --install
+      # - name: Run gometalinter
+      #   run: $GOPATH/bin/gometalinter.v2 . > gometalinter-report.out || true
       - name: Run test coverage
         run:  go test ./... -coverprofile=coverage.out
       - name: Run test report
