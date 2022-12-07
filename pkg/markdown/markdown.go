@@ -82,7 +82,7 @@ func createMDStrings(commits []WorkItem, org, project, pat string, workItemOutpu
 		testString, itemInArray := mdContains(returnedString, commits[c].ServiceName)
 		relevantWI, wIExist := getReleventWI(workItems, commits[c], returnedString)
 		// untracked is for items not in commit convention
-		returnedString = mdAddLine(c, itemInArray, relevantWI, commits, wIExist, testString, returnedString, workItems, org, project, pat)
+		returnedString = mdAddLine(itemInArray, commits[c], wIExist, testString, returnedString, workItems.Value[relevantWI], org, project)
 	}
 	// returns an array of strings for MD and list of work Items for ADO
 	return returnedString
@@ -106,21 +106,22 @@ func DebugPrintStruct(st interface{}) {
 	out, _ := json.Marshal(st)
 	log.Debug(string(out))
 }
-func mdAddLine(c, itemInArray, relevantWI int, commits []WorkItem, wIExist, testString bool, returnedString []string, workItems provider.BatchWorkItems, org, project, pat string) []string {
-	if commits[c].ServiceName == "untracked" || commits[c].ServiceName == KlogResp {
-		comentName := strings.ReplaceAll(commits[c].Name, "\n", " ")
-		log.Debug(commits[c].Name)
+
+func mdAddLine(itemInArray int, commit WorkItem, wIExist, testString bool, returnedString []string, workItem provider.WorkItem, org, project string) []string {
+	if commit.ServiceName == "untracked" || commit.ServiceName == KlogResp {
+		comentName := strings.ReplaceAll(commit.Name, "\n", " ")
+		log.Debug(commit.Name)
 		if testString {
 			returnedString[itemInArray] = returnedString[itemInArray] + "| NA | NA |" + comentName + " | NA |\n"
 		} else {
-			returnedString = append(returnedString, "## "+commits[c].ServiceName+"\n"+KmdTable+"| NA | NA |"+comentName+"| NA |\n")
+			returnedString = append(returnedString, "## "+commit.ServiceName+"\n"+KmdTable+"| NA | NA |"+comentName+"| NA |\n")
 		}
 	} else if !wIExist {
 		// DebugPrintStruct(relevantWI)
 		if testString {
-			returnedString[itemInArray] = returnedString[itemInArray] + " | " + fmt.Sprint(workItems.Value[relevantWI].ID) + " | " + workItems.Value[relevantWI].Fields.SystemWorkItemType + " | " + "[" + workItems.Value[relevantWI].Fields.SystemTitle + "](" + KadoUrl + org + "/" + project + "/_workitems/edit/" + fmt.Sprint(workItems.Value[relevantWI].ID) + ")" + " | " + commits[c].Hash + " |\n"
+			returnedString[itemInArray] = returnedString[itemInArray] + " | " + fmt.Sprint(workItem.ID) + " | " + workItem.Fields.SystemWorkItemType + " | " + "[" + workItem.Fields.SystemTitle + "](" + KadoUrl + org + "/" + project + "/_workitems/edit/" + fmt.Sprint(workItem.ID) + ")" + " | " + commit.Hash + " |\n"
 		} else {
-			returnedString = append(returnedString, "## "+commits[c].ServiceName+"\n"+KmdTable+" | "+fmt.Sprint(workItems.Value[relevantWI].ID)+" | "+workItems.Value[relevantWI].Fields.SystemWorkItemType+" | "+"["+workItems.Value[relevantWI].Fields.SystemTitle+"]("+KadoUrl+org+"/"+project+"/_workitems/edit/"+fmt.Sprint(workItems.Value[relevantWI].ID)+")"+" | "+commits[c].Hash+" |\n")
+			returnedString = append(returnedString, "## "+commit.ServiceName+"\n"+KmdTable+" | "+fmt.Sprint(workItem.ID)+" | "+workItem.Fields.SystemWorkItemType+" | "+"["+workItem.Fields.SystemTitle+"]("+KadoUrl+org+"/"+project+"/_workitems/edit/"+fmt.Sprint(workItem.ID)+")"+" | "+commit.Hash+" |\n")
 		}
 	}
 	return returnedString
