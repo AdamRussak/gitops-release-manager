@@ -86,7 +86,7 @@ func (c GitsOptions) fetchOrigin(refSpecStr string) error {
 		if err == git.NoErrAlreadyUpToDate {
 			log.Info("refs already up to date")
 		} else {
-			return errors.New(fmt.Sprintf("fetch origin failed: %v", err))
+			return fmt.Errorf("fetch origin failed: %v", err)
 		}
 	}
 
