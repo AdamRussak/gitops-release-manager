@@ -146,14 +146,14 @@ func (b BaseInfo) baseApiCall(callType, apiPath, body string) *http.Response {
 	log.Debug("Entered baseApiCall function")
 	payload := getPayload(body)
 	client := &http.Client{}
-	log.Tracef("Full Api Url: %s\n      Call type: %s", b.BaseUrl+apiPath+"?api-version=7.0", callType)
+	log.Tracef("Full Api Url: %s\n      Call type: %s", b.BaseUrl+apiPath+Kapi, callType)
 	var req *http.Request
 	var err error
 	switch callType {
 	case "GET":
-		req, err = http.NewRequest("GET", b.BaseUrl+apiPath+"?api-version=7.0", nil)
+		req, err = http.NewRequest("GET", b.BaseUrl+apiPath+Kapi, nil)
 	case "POST":
-		req, err = http.NewRequest("POST", b.BaseUrl+apiPath+"?api-version=7.0", payload)
+		req, err = http.NewRequest("POST", b.BaseUrl+apiPath+Kapi, payload)
 	}
 
 	core.OnErrorFail(err, "faild to create http request")
