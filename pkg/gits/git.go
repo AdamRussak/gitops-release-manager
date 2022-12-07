@@ -58,7 +58,7 @@ func (c GitsOptions) CheckOutBranch() {
 		Force:  true,
 	}
 	if err := w.Checkout(&branchCoOpts); err != nil {
-		log.Warning("local checkout of branch '%s' failed, will attempt to fetch remote branch of same name.", c.GitBranch)
+		log.Warningf("local checkout of branch '%s' failed, will attempt to fetch remote branch of same name.", c.GitBranch)
 		log.Warning("like `git checkout <branch>` defaulting to `git checkout -b <branch> --track <remote>/<branch>`")
 
 		mirrorRemoteBranchRefSpec := fmt.Sprintf("refs/heads/%s:refs/heads/%s", c.GitBranch, c.GitBranch)
