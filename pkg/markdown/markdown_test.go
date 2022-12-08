@@ -15,25 +15,40 @@ var wiStruct = provider.BatchWorkItems{Count: 3, Value: []provider.WorkItem{{ID:
 // 	WriteToMD()
 // }
 
-// func TestWriteToFile(t *testing.T) {
-// 	writeToFile()
-// }
-// func TestMdContains(t *testing.T) {
-// 	mdContains()
+//	func TestWriteToFile(t *testing.T) {
+//		writeToFile()
+//	}
+func TestMdContains(t *testing.T) {
+	t.Run("String has Header", func(t *testing.T) {
+		testStringsArray := []string{"Released Work Items #234 #324", "## header"}
+		testString := "header"
+		testBool, testInt := mdContains(testStringsArray, testString)
+		if !testBool && testInt != 1 {
+			t.Fatalf(`mdContains() = %s and %s,should have been %s and %s`, fmt.Sprint(testBool), fmt.Sprint(testInt), "0", "false")
+		}
+	})
+	t.Run("String Dosent have a Header", func(t *testing.T) {
+		testStringsArray := []string{"Released Work Items #234 #324", "No header"}
+		testString := "new line"
+		testBool, testInt := mdContains(testStringsArray, testString)
+		if testBool && testInt == 1 {
+			t.Fatalf(`mdContains() = %s and %s,should have been %s and %s`, fmt.Sprint(testBool), fmt.Sprint(testInt), "0", "false")
+		}
+	})
 
-// }
+}
 func TestGetWorkItem(t *testing.T) {
 	t.Run("Work Items ID detected", func(t *testing.T) {
 		commit := "Released Work Items #234 #324"
 		testArray := getWorkItem(commit)
-		if len(testArray) == 2 {
+		if len(testArray) != 2 {
 			t.Fatalf(`getWorkItem() = %s,should have been %s`, fmt.Sprint(testArray), "2")
 		}
 	})
 	t.Run("Work Items ID not detected", func(t *testing.T) {
 		commit := "Released Work Items Not Listed"
 		testArray := getWorkItem(commit)
-		if len(testArray) == 0 {
+		if len(testArray) != 0 {
 			t.Fatalf(`getWorkItem() = %s ,should have been %s `, fmt.Sprint(testArray), "0")
 		}
 	})
