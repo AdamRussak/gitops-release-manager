@@ -5,6 +5,7 @@ import (
 	"testing"
 )
 
+// TODO: create mock package: https://www.thegreatcodeadventure.com/mocking-http-requests-in-golang/
 func TestIsVersionTag(t *testing.T) {
 	t.Run("Good Info", func(t *testing.T) {
 		testTag := "1.0.0"
