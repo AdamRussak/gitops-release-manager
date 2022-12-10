@@ -10,11 +10,9 @@ import (
 )
 
 // ddCmd represents the dd command
-var apikey string
-var appkey string
 var release = &cobra.Command{
 	Use:    "release",
-	Short:  "Send Metrics to Data Dog",
+	Short:  "Create Release Notes for a new version and create tags in Git and Azure DevOps Work-Items",
 	PreRun: core.ToggleDebug,
 	Run: func(cmd *cobra.Command, args []string) {
 		option := gits.FlagsOptions{GitBranch: o.GitBranch, GitUser: o.GitUser, GitEmail: o.GitEmail, GitKeyPath: o.GitKeyPath, Output: o.Output, CommitHash: o.CommitHash, Orgenization: o.Orgenization, Pat: o.Pat, Project: o.Project, RepoPath: o.RepoPath, DryRun: o.DryRun, Gitpush: o.Gitpush}
@@ -24,6 +22,7 @@ var release = &cobra.Command{
 		if !option.DryRun {
 			provider.CreateNewAzureDevopsWorkItemTag(option.Orgenization, option.Pat, option.Project, newVersionTag, workitemsID)
 			setBool, err := option.SetTag(r, newVersionTag)
+			core.OnErrorFail(err, "failed to create Tag")
 			if setBool {
 				err = option.PushTags(r)
 				core.OnErrorFail(err, "failed to push the tag")
