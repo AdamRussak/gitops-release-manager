@@ -4,6 +4,11 @@ type BatchWorkItems struct {
 	Count int        `json:"count,omitempty"`
 	Value []WorkItem `json:"value,omitempty"`
 }
+type TagPayload []struct {
+	Op    string `json:"op"`
+	Path  string `json:"path"`
+	Value string `json:"value"`
+}
 type Payload struct {
 	Ids    []int    `json:"ids"`
 	Fields []string `json:"fields"`

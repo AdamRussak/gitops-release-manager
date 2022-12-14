@@ -8,6 +8,7 @@ import (
 	"gitops-release-manager/pkg/core"
 	"io"
 	"net/http"
+	"reflect"
 	"regexp"
 	"strconv"
 	"strings"
@@ -102,9 +103,10 @@ func (b BaseInfo) converWorkItemToInt(wi []string) []int {
 }
 
 func tagBody(body string) []byte {
-	log.Debug(body)
-	pingJSON := Payload{}
-	err := json.Unmarshal([]byte(body), &pingJSON)
+	log.Debugf("the body inside tagBody: %s", body)
+	pingJSON := checkIfArray(body)
+	bodyByte := []byte(body)
+	err := json.Unmarshal(bodyByte, &pingJSON)
 	core.OnErrorFail(err, "faild to create Payload")
 	p, err := json.Marshal(pingJSON)
 	core.OnErrorFail(err, "faild to marshel Payload")
@@ -154,6 +156,8 @@ func (b BaseInfo) baseApiCall(callType, apiPath, body string) *http.Response {
 		req, err = http.NewRequest("GET", b.BaseUrl+apiPath+Kapi, nil)
 	case "POST":
 		req, err = http.NewRequest("POST", b.BaseUrl+apiPath+Kapi, payload)
+	case "PATCH":
+		req, err = http.NewRequest("PATCH", b.BaseUrl+apiPath+Kapi, payload)
 	}
 
 	core.OnErrorFail(err, "faild to create http request")
@@ -183,4 +187,15 @@ func ContentType(callType string) string {
 		log.Trace("Content-Type: application/json")
 		return "application/json"
 	}
+}
+
+func checkIfArray(body string) interface{} {
+	if reflect.TypeOf(body).Kind() == reflect.Array {
+		log.Debug("body is an array")
+		return TagPayload{}
+	} else {
+		log.Debug("body is not an array")
+		return Payload{}
+	}
+
 }
