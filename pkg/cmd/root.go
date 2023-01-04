@@ -11,8 +11,10 @@ import (
 )
 
 // rootCmd represents the base command when called without any subcommands
+var tversion string
 var (
 	o       FlagsOptions
+	version = tversion
 	rootCmd = &cobra.Command{
 		Use:   "gitops-version",
 		Short: "A brief description of your application",
