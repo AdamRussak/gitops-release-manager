@@ -26,11 +26,11 @@ jobs:
         run: echo "::set-output name=version::$(git describe --tags --always --abbrev=0 --match='[0-9]*.[0-9]*.[0-9]*' 2> /dev/null)"
         id: version
       - name: Run Linux Build
-        run: go build -ldflags="-X '$PACKAGE_NAME/pkg/cmd.tversion=${{ steps.version.outputs.version }}'" .
+        run: go build -ldflags="-X '${{ env.PACKAGE_NAME }}/pkg/cmd.tversion=${{ steps.version.outputs.version }}'" .
       - name: Run Windows Build
-        run: env GOOS=windows GOARCH=amd64 go build -ldflags="-X '$PACKAGE_NAME/pkg/cmd.tversion=${{ steps.version.outputs.version }}'" -o ./$PACKAGE_NAME.exe .
+        run: env GOOS=windows GOARCH=amd64 go build -ldflags="-X '${{ env.PACKAGE_NAME }}/pkg/cmd.tversion=${{ steps.version.outputs.version }}'" -o ./${{ env.PACKAGE_NAME }}.exe .
       - name: Run Mac Build
-        run: env GOOS=darwin GOARCH=arm64 go build -ldflags="-X '$PACKAGE_NAME/pkg/cmd.tversion=${{ steps.version.outputs.version }}'" -o ./$PACKAGE_NAME .
+        run: env GOOS=darwin GOARCH=arm64 go build -ldflags="-X '${{ env.PACKAGE_NAME }}/pkg/cmd.tversion=${{ steps.version.outputs.version }}'" -o ./${{ env.PACKAGE_NAME }} .
       - name: release
         uses: actions/create-release@v1
         id: create_release
@@ -48,8 +48,8 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./k8f
-          asset_name: k8f
+          asset_path: ./${{ env.PACKAGE_NAME }}
+          asset_name: ${{ env.PACKAGE_NAME }}
           asset_content_type: text/plain
       - name: upload Windows artifact
         uses: actions/upload-release-asset@v1
@@ -57,8 +57,8 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./k8f.exe
-          asset_name: k8f.exe
+          asset_path: ./${{ env.PACKAGE_NAME }}.exe
+          asset_name: ${{ env.PACKAGE_NAME }}.exe
           asset_content_type: text/plain
       - name: upload Mac artifact
         uses: actions/upload-release-asset@v1
@@ -66,6 +66,6 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./k8f_darwin
-          asset_name: k8f_darwin-arm64
+          asset_path: ./${{ env.PACKAGE_NAME }}_darwin
+          asset_name: ${{ env.PACKAGE_NAME }}_darwin-arm64
           asset_content_type: text/plain
