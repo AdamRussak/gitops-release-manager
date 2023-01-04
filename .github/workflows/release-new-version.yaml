@@ -30,7 +30,7 @@ jobs:
       - name: Run Windows Build
         run: env GOOS=windows GOARCH=amd64 go build -ldflags="-X '${{ env.PACKAGE_NAME }}/pkg/cmd.tversion=${{ steps.version.outputs.version }}'" -o ./${{ env.PACKAGE_NAME }}.exe .
       - name: Run Mac Build
-        run: env GOOS=darwin GOARCH=arm64 go build -ldflags="-X '${{ env.PACKAGE_NAME }}/pkg/cmd.tversion=${{ steps.version.outputs.version }}'" -o ./${{ env.PACKAGE_NAME }} .
+        run: env GOOS=darwin GOARCH=arm64 go build -ldflags="-X '${{ env.PACKAGE_NAME }}/pkg/cmd.tversion=${{ steps.version.outputs.version }}'" -o ./${{ env.PACKAGE_NAME }}_darwin .
       - name: release
         uses: actions/create-release@v1
         id: create_release
