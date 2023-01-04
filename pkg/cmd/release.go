@@ -11,9 +11,11 @@ import (
 
 // ddCmd represents the dd command
 var release = &cobra.Command{
-	Use:    "release",
-	Short:  "Create Release Notes for a new version and create tags in Git and Azure DevOps Work-Items",
-	PreRun: core.ToggleDebug,
+	Use:     "release",
+	Short:   releaseShortDisc,
+	Long:    releaseLongDisc,
+	PreRun:  core.ToggleDebug,
+	Example: releaseReleaseDisc,
 	Run: func(cmd *cobra.Command, args []string) {
 		option := gits.FlagsOptions{GitBranch: o.GitBranch, GitUser: o.GitUser, GitEmail: o.GitEmail, GitKeyPath: o.GitKeyPath, Output: o.Output, CommitHash: o.CommitHash, Orgenization: o.Orgenization, Pat: o.Pat, Project: o.Project, RepoPath: o.RepoPath, DryRun: o.DryRun, Gitpush: o.Gitpush}
 		r, commentsArray, newVersionTag, latestTag := option.MainGits()
