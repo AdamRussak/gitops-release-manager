@@ -47,10 +47,7 @@ func (c FlagsOptions) MainGits() (*git.Repository, []markdown.WorkItem, string, 
 func (c GitsOptions) CheckOutBranch() {
 	w, err := c.gitInstance.Worktree()
 	core.OnErrorFail(err, "failed to get worktree")
-
-	// ... checking out branch
 	log.Infof("git checkout %s", c.GitBranch)
-
 	branchRefName := plumbing.NewBranchReferenceName(c.GitBranch)
 	branchCoOpts := git.CheckoutOptions{
 		Branch: plumbing.ReferenceName(branchRefName),
@@ -59,7 +56,6 @@ func (c GitsOptions) CheckOutBranch() {
 	if err := w.Checkout(&branchCoOpts); err != nil {
 		log.Warningf("local checkout of branch '%s' failed, will attempt to fetch remote branch of same name.", c.GitBranch)
 		log.Warning("like `git checkout <branch>` defaulting to `git checkout -b <branch> --track <remote>/<branch>`")
-
 		mirrorRemoteBranchRefSpec := fmt.Sprintf("refs/heads/%s:refs/heads/%s", c.GitBranch, c.GitBranch)
 		err = c.fetchOrigin(mirrorRemoteBranchRefSpec)
 		core.OnErrorFail(err, "failed to featch branch origin")
