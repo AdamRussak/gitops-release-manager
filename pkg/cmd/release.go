@@ -17,7 +17,7 @@ var release = &cobra.Command{
 	PreRun:  core.ToggleDebug,
 	Example: releaseReleaseDisc,
 	Run: func(cmd *cobra.Command, args []string) {
-		option := gits.FlagsOptions{GitBranch: o.GitBranch, GitUser: o.GitUser, GitEmail: o.GitEmail, GitKeyPath: o.GitKeyPath, Output: o.Output, CommitHash: o.CommitHash, Orgenization: o.Orgenization, Pat: o.Pat, Project: o.Project, RepoPath: o.RepoPath, DryRun: o.DryRun, Gitpush: o.Gitpush}
+		option := gits.FlagsOptions{GitAuth: o.GitAuth, GitBranch: o.GitBranch, GitUser: o.GitUser, GitEmail: o.GitEmail, GitKeyPath: o.GitKeyPath, Output: o.Output, CommitHash: o.CommitHash, Orgenization: o.Orgenization, Pat: o.Pat, Project: o.Project, RepoPath: o.RepoPath, DryRun: o.DryRun, Gitpush: o.Gitpush}
 		r, commentsArray, newVersionTag, latestTag := option.MainGits()
 		sortingForMD, workitemsID := markdown.SortCommitsForMD(commentsArray, option.Orgenization, option.Project, option.Pat)
 		var setBool bool
@@ -47,6 +47,7 @@ func init() {
 	release.Flags().StringVar(&o.GitUser, "git-user", ".", "Set userName to tag with")
 	release.Flags().StringVar(&o.GitEmail, "git-email", ".", "Set email to tag with")
 	release.Flags().StringVar(&o.GitKeyPath, "git-keyPath", "~/.ssh/id_rsa", "Set email to tag with")
+	release.Flags().StringVar(&o.GitAuth, "auth", "https", "Set Auth type (ssh or https")
 	release.Flags().BoolVar(&o.DryRun, "dry-run", false, "If true, only run a dry-run with cli output")
 	release.Flags().BoolVar(&o.Gitpush, "git-push", false, "If true, only run a dry-run with cli output")
 	release.MarkFlagsRequiredTogether("org", "project", "pat")

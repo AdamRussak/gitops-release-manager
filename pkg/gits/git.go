@@ -13,6 +13,7 @@ import (
 	"github.com/go-git/go-git/v5/config"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/object"
+	"github.com/go-git/go-git/v5/plumbing/transport/http"
 	"github.com/go-git/go-git/v5/plumbing/transport/ssh"
 	log "github.com/sirupsen/logrus"
 )
@@ -47,10 +48,7 @@ func (c FlagsOptions) MainGits() (*git.Repository, []markdown.WorkItem, string, 
 func (c GitsOptions) CheckOutBranch() {
 	w, err := c.gitInstance.Worktree()
 	core.OnErrorFail(err, "failed to get worktree")
-
-	// ... checking out branch
 	log.Infof("git checkout %s", c.GitBranch)
-
 	branchRefName := plumbing.NewBranchReferenceName(c.GitBranch)
 	branchCoOpts := git.CheckoutOptions{
 		Branch: plumbing.ReferenceName(branchRefName),
@@ -58,12 +56,10 @@ func (c GitsOptions) CheckOutBranch() {
 	}
 	if err := w.Checkout(&branchCoOpts); err != nil {
 		log.Warningf("local checkout of branch '%s' failed, will attempt to fetch remote branch of same name.", c.GitBranch)
-		log.Warning("like `git checkout <branch>` defaulting to `git checkout -b <branch> --track <remote>/<branch>`")
-
 		mirrorRemoteBranchRefSpec := fmt.Sprintf("refs/heads/%s:refs/heads/%s", c.GitBranch, c.GitBranch)
 		err = c.fetchOrigin(mirrorRemoteBranchRefSpec)
 		core.OnErrorFail(err, "failed to featch branch origin")
-
+		log.Debugf("Trying to  Checkout %s branch", branchCoOpts.Branch.String())
 		err = w.Checkout(&branchCoOpts)
 		core.OnErrorFail(err, "failed to checkout branch")
 	}
@@ -71,6 +67,7 @@ func (c GitsOptions) CheckOutBranch() {
 }
 
 func (c GitsOptions) fetchOrigin(refSpecStr string) error {
+	log.Debugf("Trying to featch refs: %s", refSpecStr)
 	remote, err := c.gitInstance.Remote("origin")
 	core.OnErrorFail(err, "failed in reachging Origin")
 
@@ -152,15 +149,28 @@ func (c FlagsOptions) SetTag(r *git.Repository, tag string) (bool, error) {
 
 // pushing the new tag the the remote repo
 func (c FlagsOptions) PushTags(r *git.Repository) error {
-	auth, err := c.publicKey()
-	core.OnErrorFail(err, "Failed to get the SSH")
-	po := &git.PushOptions{
-		RemoteName: "origin",
-		Progress:   os.Stdout,
-		RefSpecs:   []config.RefSpec{config.RefSpec("refs/tags/*:refs/tags/*")},
-		Auth:       auth,
+	var po *git.PushOptions
+	if c.GitAuth == "ssh" {
+		log.Debug("Using SSH auth")
+		auth, err := c.publicKey()
+		core.OnErrorFail(err, "Failed to get the SSH")
+		po = &git.PushOptions{
+			RemoteName: "origin",
+			Progress:   os.Stdout,
+			RefSpecs:   []config.RefSpec{config.RefSpec("refs/tags/*:refs/tags/*")},
+			Auth:       auth,
+		}
+	} else {
+		log.Debug("Using HTTPS auth")
+		// auth := http.NewClient(nil)
+		po = &git.PushOptions{
+			RemoteName: "origin",
+			Progress:   os.Stdout,
+			RefSpecs:   []config.RefSpec{config.RefSpec("refs/tags/*:refs/tags/*")},
+			Auth:       &http.BasicAuth{Username: c.GitUser, Password: c.Pat},
+		}
 	}
-	err = r.Push(po)
+	err := r.Push(po)
 	if err != nil {
 		if err == git.NoErrAlreadyUpToDate {
 			log.Info("origin remote was up to date, no push done")
