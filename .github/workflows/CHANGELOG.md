@@ -1,5 +1,6 @@
 # GRN
 ## Changes
-- added build process 
-- opened the repo to the public
+- added support to Https
+- improved logging on verbose
 ## Breaking changes
+- *added Flag to set Auth type (ssh/http)
