@@ -38,6 +38,7 @@ func EvaluateVersion(list []string) string {
 }
 
 func BumpVersion(tag string) string {
+	log.Debug("Starting BumpVersion() function")
 	test, _ := version.NewSemver(tag)
 	log.Info("before: " + tag)
 	segments := test.Segments()

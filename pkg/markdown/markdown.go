@@ -78,11 +78,21 @@ func createMDStrings(commits []WorkItem, org, project, pat string, workItemOutpu
 	var returnedString []string
 	workItems := provider.GetWorkItemBatchStruct(org, project, pat, workitemsID)
 	for c := range commits {
+		log.Debugf("the commit string: %s", commits[c])
 		// check if already exist in string for MD, returns bool and int (location of item in array if exist)
+		log.Debugf("The returnString: %s", returnedString)
+		log.Debugf("The ServiceName: %s", commits[c].ServiceName)
 		testString, itemInArray := mdContains(returnedString, commits[c].ServiceName)
+		log.Debugf("The testString: %t", testString)
+		log.Debugf("The itemInArray: %x", itemInArray)
 		relevantWI, wIExist := getReleventWI(workItems, commits[c], returnedString)
 		// untracked is for items not in commit convention
+		log.Debugf("The relevantWI: %x", relevantWI)
+		log.Debugf("The wIExist: %t", wIExist)
 		adPath := org + "/" + project
+		log.Debugf("The adPath: %s", adPath)
+		log.Debugf("Added String: %s", commits[c])
+		// log.Debugf("workItems ID: %x", string(workItems.Value))
 		returnedString = mdAddLine(itemInArray, commits[c], wIExist, testString, returnedString, workItems.Value[relevantWI], adPath)
 	}
 	// returns an array of strings for MD and list of work Items for ADO
@@ -104,6 +114,7 @@ func getReleventWI(wiStruct provider.BatchWorkItems, commit WorkItem, mdArray []
 }
 
 func mdAddLine(itemInArray int, commit WorkItem, wIExist, testString bool, returnedString []string, workItem provider.WorkItem, adPath string) []string {
+	log.Debugf("Starting the mdAddLine() func")
 	if commit.ServiceName == "untracked" || commit.ServiceName == KlogResp {
 		comentName := strings.ReplaceAll(commit.Name, "\n", " ")
 		log.Debug(commit.Name)
@@ -119,5 +130,6 @@ func mdAddLine(itemInArray int, commit WorkItem, wIExist, testString bool, retur
 			returnedString = append(returnedString, "## "+commit.ServiceName+"\n"+KmdTable+" | "+fmt.Sprint(workItem.ID)+" | "+workItem.Fields.SystemWorkItemType+" | "+"["+workItem.Fields.SystemTitle+"]("+KadoUrl+adPath+"/_workitems/edit/"+fmt.Sprint(workItem.ID)+")"+" | "+commit.Hash+" |\n")
 		}
 	}
+	log.Debugf("The output from the mdAddLine(): %s", returnedString)
 	return returnedString
 }
