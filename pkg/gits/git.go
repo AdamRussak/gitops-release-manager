@@ -63,7 +63,7 @@ func (c GitsOptions) CheckOutBranch() {
 		mirrorRemoteBranchRefSpec := fmt.Sprintf("refs/heads/%s:refs/heads/%s", c.GitBranch, c.GitBranch)
 		err = c.fetchOrigin(mirrorRemoteBranchRefSpec)
 		core.OnErrorFail(err, "failed to featch branch origin")
-
+		log.Debugf("Trying to  Checkout %s branch", branchCoOpts.Branch.String())
 		err = w.Checkout(&branchCoOpts)
 		core.OnErrorFail(err, "failed to checkout branch")
 	}
@@ -71,6 +71,7 @@ func (c GitsOptions) CheckOutBranch() {
 }
 
 func (c GitsOptions) fetchOrigin(refSpecStr string) error {
+	log.Debugf("Trying to featch refs: %s", refSpecStr)
 	remote, err := c.gitInstance.Remote("origin")
 	core.OnErrorFail(err, "failed in reachging Origin")
 
