@@ -5,9 +5,12 @@ import (
 	"gitops-release-manager/pkg/gits"
 	"gitops-release-manager/pkg/markdown"
 	"gitops-release-manager/pkg/provider"
+	"path/filepath"
 
 	"github.com/spf13/cobra"
 )
+
+var fileName string
 
 // ddCmd represents the dd command
 var release = &cobra.Command{
@@ -31,13 +34,21 @@ var release = &cobra.Command{
 			}
 		}
 		if setBool || option.DryRun {
-			markdown.WriteToMD(sortingForMD, latestTag, newVersionTag, option.Output)
+			var output string
+			if fileName == "" {
+				output = filepath.Join(option.Output, newVersionTag)
+			} else {
+				output = filepath.Join(option.Output, fileName)
+			}
+			file := markdown.HasMDSuffix(output, "md")
+			markdown.WriteToMD(sortingForMD, latestTag, newVersionTag, file)
 		}
 	},
 }
 
 func init() {
-	release.Flags().StringVar(&o.Output, "output", "./Report.md", "Set path to report output")
+	release.Flags().StringVar(&o.Output, "output", "./", "Set path to report output")
+	release.Flags().StringVar(&fileName, "filename", "", "Costume file name")
 	release.Flags().StringVar(&o.CommitHash, "hash", "", "Set new TAG Hash")
 	release.Flags().StringVar(&o.Orgenization, "org", "", "Set Azure DevOps orgenziation")
 	release.Flags().StringVar(&o.Pat, "pat", "", "Set PAT for API calls")

@@ -17,3 +17,29 @@ git rev-list --ancestry-path 7b4a07a..ecf5891
 1. provide the command with the optional flags: `gitops-version release --repo-path /home/adam/<repo> --org <AzureDevOps orgID> --project <AzureDevOps project> --pat <AzureDevOps PAT > --hash <Git commit Hash> <path to git ssh keys> -v`
 1. The code looks for latest tag and gets all the commits between it and the provided commit Hash
 1. if dry run was not provided, the output will be in the `CWD` with the name: `Report.md`
+### supported paramters:
+global paramters:
+```sh
+-v, --verbose   verbose logging
+```
+`gitops-release-manager -h`:
+```sh
+    --version   print out the current version
+```
+`gitops-release-manager release -h`:
+```sh
+      --auth string          Set Auth type (ssh or https (default "https")
+      --dry-run              If true, only run a dry-run with cli output
+      --filename string      Costume file name
+      --git-branch string    Set Brnach to tag (default "main")
+      --git-email string     Set email to tag with (default ".")
+      --git-keyPath string   Set email to tag with (default "~/.ssh/id_rsa")
+      --git-push             If true, only run a dry-run with cli output
+      --git-user string      Set userName to tag with (default ".")
+      --hash string          Set new TAG Hash
+      --org string           Set Azure DevOps orgenziation
+      --output string        Set path to report output (default "./")
+      --pat string           Set PAT for API calls
+      --project string       Set Azure DevOps project
+      --repo-path string     Set Path to Git repo root (default ".")
+```

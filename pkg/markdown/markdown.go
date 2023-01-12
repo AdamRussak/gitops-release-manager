@@ -133,3 +133,9 @@ func mdAddLine(itemInArray int, commit WorkItem, wIExist, testString bool, retur
 	log.Debugf("The output from the mdAddLine(): %s", returnedString)
 	return returnedString
 }
+func HasMDSuffix(file, extension string) string {
+	if !strings.HasSuffix(file, extension) {
+		file += "." + extension
+	}
+	return file
+}
