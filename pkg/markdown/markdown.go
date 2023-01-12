@@ -13,16 +13,20 @@ import (
 
 // sort workitems after they have been splited in the gits pkg
 func SortCommitsForMD(commits []WorkItem, org, project, pat string) ([]string, []string) {
+	log.Debug("Start Func SortCommitsForMD()")
 	var workitemsID []string
 	var wIOutput []WorkItemOutput
+	log.Debug("commits array: %s", commits)
 	for c := range commits {
-		workItems := getWorkItem(commits[c].Name)
+		workItems := getWorkItem(commits[c])
 		for _, workItem := range workItems {
 			if !checkDuplicateItem(workitemsID, workItem) {
+				log.Debug("work item not duplicate")
 				workitemsID = append(workitemsID, workItem)
 				wIOutput = append(wIOutput, WorkItemOutput{itemID: c, workItem: workItem, Hash: commits[c].Hash})
 			}
 		}
+
 	}
 	return createMDStrings(commits, org, project, pat, wIOutput, workitemsID), workitemsID
 }
@@ -50,19 +54,21 @@ func mdContains(s []string, e string) (bool, int) {
 	return false, 0
 }
 
-func getWorkItem(s string) []string {
+func getWorkItem(s WorkItem) []string {
+	log.Debug("starting getWorkItem()")
 	var ret []string
-	if strings.Contains(s, KlogResp) {
+	if strings.Contains(s.Name, KlogResp) || s.ServiceName == "untracked" {
 		ret = append(ret, KlogResp)
 	} else {
 		WorkItems := regexp.MustCompile(`[0-9]+`)
-		matches := WorkItems.FindAllString(s, 100)
+		matches := WorkItems.FindAllString(s.Name, 100)
 		for i := range matches {
 			log.Debugf("%s is a work Item", matches[i])
 			ret = append(ret, matches[i])
 		}
 
 	}
+	log.Debug("getWorkItem() returned: %s", ret)
 	return ret
 }
 func checkDuplicateItem(workItemsArray []string, newWorkItem string) bool {
@@ -92,8 +98,10 @@ func createMDStrings(commits []WorkItem, org, project, pat string, workItemOutpu
 		adPath := org + "/" + project
 		log.Debugf("The adPath: %s", adPath)
 		log.Debugf("Added String: %s", commits[c])
-		// log.Debugf("workItems ID: %x", string(workItems.Value))
-		returnedString = mdAddLine(itemInArray, commits[c], wIExist, testString, returnedString, workItems.Value[relevantWI], adPath)
+		log.Debugf("workItems ID: %x", workItems.Value)
+		if len(workItems.Value) > 0 {
+			returnedString = mdAddLine(itemInArray, commits[c], wIExist, testString, returnedString, workItems.Value[relevantWI], adPath)
+		}
 	}
 	// returns an array of strings for MD and list of work Items for ADO
 	return returnedString

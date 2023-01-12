@@ -28,18 +28,18 @@ global paramters:
 ```
 `gitops-release-manager release -h`:
 ```sh
-      --auth string          Set Auth type (ssh or https (default "https")
-      --dry-run              If true, only run a dry-run with cli output
-      --filename string      Costume file name
-      --git-branch string    Set Brnach to tag (default "main")
-      --git-email string     Set email to tag with (default ".")
-      --git-keyPath string   Set email to tag with (default "~/.ssh/id_rsa")
-      --git-push             If true, only run a dry-run with cli output
-      --git-user string      Set userName to tag with (default ".")
-      --hash string          Set new TAG Hash
-      --org string           Set Azure DevOps orgenziation
-      --output string        Set path to report output (default "./")
-      --pat string           Set PAT for API calls
-      --project string       Set Azure DevOps project
-      --repo-path string     Set Path to Git repo root (default ".")
+      --auth        string  Set Auth type (ssh or https (default "https")
+      --dry-run     bool    If true, only run a dry-run with cli output
+      --filename    string  Costume file name
+      --git-branch  string  Set Brnach to tag (default "main")
+      --git-email   string  Set email to tag with (default ".")
+      --git-keyPath string  Set email to tag with (default "~/.ssh/id_rsa")
+      --git-push    bool    If true, only run a dry-run with cli output
+      --git-user    string  Set userName to tag with (default ".")
+      --hash        string  Set new TAG Hash
+      --org         string  Set Azure DevOps orgenziation
+      --output      string  Set path to report output (default "./")
+      --pat         string  Set PAT for API calls
+      --project     string  Set Azure DevOps project
+      --repo-path   string  Set Path to Git repo root (default ".")
 ```

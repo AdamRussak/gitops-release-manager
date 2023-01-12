@@ -39,14 +39,14 @@ func TestMdContains(t *testing.T) {
 }
 func TestGetWorkItem(t *testing.T) {
 	t.Run("Work Items ID detected", func(t *testing.T) {
-		commit := "Released Work Items #234 #324"
+		commit := WorkItem{Name: "Released Work Items #234 #324", ServiceName: "test service", Hash: "sdfsdfsdfs"}
 		testArray := getWorkItem(commit)
 		if len(testArray) != 2 {
 			t.Fatalf(`getWorkItem() = %s,should have been %s`, fmt.Sprint(testArray), "2")
 		}
 	})
 	t.Run("Work Items ID not detected", func(t *testing.T) {
-		commit := "Released Work Items Not Listed"
+		commit := WorkItem{Name: "Released Work Items Not Listed", ServiceName: "test service", Hash: "sdfsdfsdfs"}
 		testArray := getWorkItem(commit)
 		if len(testArray) != 0 {
 			t.Fatalf(`getWorkItem() = %s ,should have been %s `, fmt.Sprint(testArray), "0")
