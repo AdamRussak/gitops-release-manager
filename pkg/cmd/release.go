@@ -7,6 +7,7 @@ import (
 	"gitops-release-manager/pkg/provider"
 	"path/filepath"
 
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
@@ -41,6 +42,7 @@ var release = &cobra.Command{
 				output = filepath.Join(option.Output, fileName)
 			}
 			file := markdown.HasMDSuffix(output, "md")
+			log.Info(file)
 			markdown.WriteToMD(sortingForMD, latestTag, newVersionTag, file)
 		}
 	},
