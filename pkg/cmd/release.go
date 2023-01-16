@@ -30,7 +30,6 @@ var release = &cobra.Command{
 		option := gits.FlagsOptions{GitAuth: o.GitAuth, GitBranch: o.GitBranch, GitUser: o.GitUser, GitEmail: o.GitEmail, GitKeyPath: o.GitKeyPath, Output: o.Output, CommitHash: o.CommitHash, Orgenization: o.Orgenization, Pat: o.Pat, Project: o.Project, RepoPath: o.RepoPath, DryRun: o.DryRun, Gitpush: o.Gitpush}
 		r, commentsArray, newVersionTag, latestTag := option.MainGits()
 		sortingForMD, workitemsID := markdown.SortCommitsForMD(commentsArray, option.Orgenization, option.Project, option.Pat)
-		var setBool bool
 		if !option.DryRun {
 			provider.CreateNewAzureDevopsWorkItemTag(option.Orgenization, option.Pat, option.Project, newVersionTag, workitemsID)
 			setBool, err := option.SetTag(r, newVersionTag)
@@ -40,23 +39,21 @@ var release = &cobra.Command{
 				core.OnErrorFail(err, "failed to push the tag")
 			}
 		}
-		if setBool || option.DryRun {
-			var output string
-			if fileName == "" {
-				if prefix != "" {
-					output = filepath.Join(option.Output, prefix+newVersionTag)
-				} else if postfix != "" {
-					output = filepath.Join(option.Output, newVersionTag+postfix)
-				} else {
-					output = filepath.Join(option.Output, newVersionTag)
-				}
+		var output string
+		if fileName == "" {
+			if prefix != "" {
+				output = filepath.Join(option.Output, prefix+newVersionTag)
+			} else if postfix != "" {
+				output = filepath.Join(option.Output, newVersionTag+postfix)
 			} else {
-				output = filepath.Join(option.Output, fileName)
+				output = filepath.Join(option.Output, newVersionTag)
 			}
-			file := markdown.HasMDSuffix(output, "md")
-			log.Warningf("The file will be saved at this path: %s", file)
-			markdown.WriteToMD(sortingForMD, latestTag, newVersionTag, file)
+		} else {
+			output = filepath.Join(option.Output, fileName)
 		}
+		file := markdown.HasMDSuffix(output, "md")
+		log.Warningf("The file will be saved at this path: %s", file)
+		markdown.WriteToMD(sortingForMD, latestTag, newVersionTag, file)
 	},
 }
 
