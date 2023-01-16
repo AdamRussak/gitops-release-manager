@@ -2,6 +2,7 @@ package core
 
 import (
 	"fmt"
+	"os"
 	"regexp"
 	"strings"
 
@@ -62,4 +63,18 @@ func IsSemVer(tag string) bool {
 	isCommit := regexp.MustCompile(`^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$`)
 	boolinas := isCommit.MatchString(tag)
 	return boolinas
+}
+
+func ValidateIsDIrectory(path string) bool {
+	fileInfo, err := os.Stat(path)
+	if err != nil {
+		OnErrorFail(err, "Error checking path:")
+	}
+	if fileInfo.IsDir() {
+		log.Infof("%s is a valid directory\n", path)
+		return true
+	} else {
+		log.Warningf("%s is not a directory\n", path)
+		return false
+	}
 }
