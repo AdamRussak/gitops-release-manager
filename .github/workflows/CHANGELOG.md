@@ -1,6 +1,6 @@
 # gitops-release-manager
 ## Fix
-- fixed output condition
+- fixed security issue with package golang.org/x/crypto
 ## Changes
 
 ## Breaking changes
