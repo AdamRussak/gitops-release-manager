@@ -16,7 +16,7 @@ func SortCommitsForMD(commits []WorkItem, org, project, pat string) ([]string, [
 	log.Debug("Start Func SortCommitsForMD()")
 	var workitemsID []string
 	var wIOutput []WorkItemOutput
-	log.Debug("commits array: %s", commits)
+	log.Debugf("commits array: %s", commits)
 	for c := range commits {
 		workItems := getWorkItem(commits[c])
 		for _, workItem := range workItems {
@@ -68,7 +68,7 @@ func getWorkItem(s WorkItem) []string {
 		}
 
 	}
-	log.Debug("getWorkItem() returned: %s", ret)
+	log.Debugf("getWorkItem() returned: %s", ret)
 	return ret
 }
 func checkDuplicateItem(workItemsArray []string, newWorkItem string) bool {
